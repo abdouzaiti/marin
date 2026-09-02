@@ -1,0 +1,6 @@
+{
+  "name": "BOTSCHAFT",
+  "description": "Professional Training Platform powered by AI for personalized learning in accounting, management, travel agency operations, and more.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
