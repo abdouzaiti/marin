@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from "react";
+import { LogIn, UserPlus, DoorOpen } from "lucide-react";
 import { UserProfile } from "../types";
 
 interface YouTubeNavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   userProfile: UserProfile;
+  setUserProfile?: React.Dispatch<React.SetStateAction<UserProfile>>;
 }
 
 export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
   activeTab,
   setActiveTab,
-  userProfile
+  userProfile,
+  setUserProfile
 }) => {
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      // Check both window scroll and internal scrollable containers
       const scrollEl = document.querySelector(".app-scroll-container");
       const currentScroll = scrollEl ? scrollEl.scrollTop : window.scrollY;
       setIsScrolled(currentScroll > 25);
@@ -28,7 +30,6 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
 
-    // Initial check
     handleScroll();
 
     return () => {
@@ -42,7 +43,7 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 h-[86px] px-4 sm:px-8 flex items-center justify-between pointer-events-auto transition-all duration-300 ${
-        isScrolled
+        isScrolled || activeTab === "login" || activeTab === "register" || activeTab === "watch" || activeTab === "profile"
           ? "bg-slate-950/85 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/30"
           : "bg-transparent border-b border-transparent shadow-none"
       }`}
@@ -89,28 +90,33 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
         </nav>
       </div>
 
-      {/* Right: Actions & Profile */}
-      <div className="flex items-center gap-3">
+      {/* Right: Se connecter & S'inscrire */}
+      <div className="flex items-center gap-2 sm:gap-3">
         <button
-          onClick={() => setActiveTab("profile")}
-          className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === "profile"
-              ? "bg-white/20 text-white border border-white/20"
-              : "text-slate-300 hover:text-white hover:bg-white/10 border border-transparent"
+          onClick={() => setActiveTab("login")}
+          className={`px-3.5 sm:px-4 py-2 rounded-none border text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
+            activeTab === "login"
+              ? "text-white bg-white/20 border-white/40 shadow-sm"
+              : "text-slate-200 hover:text-white border-white/20 hover:border-white/50 bg-slate-950/40 hover:bg-white/10"
           }`}
         >
-          <span>Mon Compte</span>
+          <LogIn className="w-4 h-4" />
+          <span>Se connecter</span>
         </button>
 
-        {/* User Avatar */}
-        <div
-          onClick={() => setActiveTab("profile")}
-          className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center font-extrabold text-xs ring-2 ring-white/20 shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95"
-          title="Voir mon profil"
+        <button
+          onClick={() => setActiveTab("register")}
+          className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-none border text-xs sm:text-sm font-bold shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-98 flex items-center gap-2 ${
+            activeTab === "register"
+              ? "bg-blue-500 border-blue-400 text-white shadow-blue-500/40"
+              : "bg-blue-600 hover:bg-blue-500 border-blue-500 hover:border-blue-400 text-white shadow-blue-600/30"
+          }`}
         >
-          {userProfile.name.charAt(0)}
-        </div>
+          <DoorOpen className="w-4 h-4" />
+          <span>S'inscrire</span>
+        </button>
       </div>
     </header>
   );
 };
+

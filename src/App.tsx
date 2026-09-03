@@ -7,6 +7,7 @@ import { YouTubeStudioModal } from "./components/YouTubeStudioModal";
 import { AiSimulationLab } from "./components/AiSimulationLab";
 import { CareerAdvisorView } from "./components/CareerAdvisorView";
 import { UserProfileView } from "./components/UserProfileView";
+import { AuthPage } from "./components/AuthPage";
 import { VIDEO_COURSES, VideoCourse } from "./data/videoCourses";
 import { UserProfile } from "./types";
 
@@ -58,6 +59,7 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         userProfile={userProfile}
+        setUserProfile={setUserProfile}
       />
 
       <div className="flex flex-1 overflow-hidden h-full w-full pb-14 md:pb-0">
@@ -121,6 +123,18 @@ export default function App() {
                 courses={courses}
                 selectCourse={handleSelectCourse}
                 setActiveTab={setActiveTab}
+              />
+            </div>
+          )}
+
+          {(activeTab === "login" || activeTab === "register") && (
+            <div className="flex-1 overflow-y-auto">
+              <AuthPage
+                initialMode={activeTab === "register" ? "register" : "login"}
+                userProfile={userProfile}
+                setUserProfile={setUserProfile}
+                onSuccess={() => setActiveTab("home")}
+                onBackToHome={() => setActiveTab("home")}
               />
             </div>
           )}
