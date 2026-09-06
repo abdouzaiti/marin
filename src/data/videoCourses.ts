@@ -24,6 +24,87 @@ export interface VideoCourse {
 
 export const VIDEO_COURSES: VideoCourse[] = [
   {
+    id: "vc-finance-ar",
+    title: "المالية الذكية: كيف تضمن أموالك وتتحكم في مستقبلك",
+    domain: "المالية الذكية",
+    instructor: "م. إبراهيم البحري",
+    instructorAvatar: "/instructor.jpg",
+    thumbnail: "/instructor.jpg",
+    views: "58k مشاهدة",
+    uploadedAt: "جديد",
+    duration: "1h 15m",
+    description: "دورة المالية الذكية: تعلم الاستراتيجيات المالية الفعالة لإدارة السيولة، تنمية الثروة والتحكم الكامل في التدفقات النقدية واستثمار المستقبل.",
+    rating: 4.98,
+    lessons: [
+      {
+        id: "fin-1",
+        title: "الأسس الجوهرية لإدارة الأموال الذكية",
+        duration: "25:00",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        transcript: "أهلاً بكم في دورة المالية الذكية. كيف ننتقل من مرحلة إدارة النفقات إلى بناء منظومة مالية رابحة ومستدامة...",
+        chapters: [
+          { time: "00:00", title: "مقدمة الدورة والأهداف" },
+          { time: "08:15", title: "قواعد التحكم في التدفق المالي" },
+          { time: "18:30", title: "استراتيجيات الاستثمار الآمن" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "vc-marketing-ar",
+    title: "التسويق الاستراتيجي: أطلق قيمة تجعلك بلا منافسة",
+    domain: "التسويق الاستراتيجي",
+    instructor: "م. إبراهيم البحري",
+    instructorAvatar: "/instructor.jpg",
+    thumbnail: "/instructor.jpg",
+    views: "46k مشاهدة",
+    uploadedAt: "شائع",
+    duration: "1h 30m",
+    description: "دورة التسويق الاستراتيجي: كيفية خلق عرض لا يُقاوم، بناء مكانة سوقية مهيمنة، وجذب العملاء دون حرق الأسعار.",
+    rating: 4.95,
+    lessons: [
+      {
+        id: "mkt-1",
+        title: "هندسة القيمة والموقع الاستراتيجي",
+        duration: "30:00",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        transcript: "في هذا الدرس سنتعلم كيف تبني ميزة تنافسية فريدة تجعل المنافسين غير ذي صلة بعرضك القوي...",
+        chapters: [
+          { time: "00:00", title: "مفهوم القيمة غير القابلة للمنافسة" },
+          { time: "12:00", title: "تحليل سيكولوجية العميل المستهدف" },
+          { time: "22:00", title: "إطلاق الحملة الاستراتيجية" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "vc-system-ar",
+    title: "نظام الشركة: من التسيير العشوائي إلى التحكم الكامل",
+    domain: "نظام الشركة",
+    instructor: "م. إبراهيم البحري",
+    instructorAvatar: "/instructor.jpg",
+    thumbnail: "/instructor.jpg",
+    views: "64k مشاهدة",
+    uploadedAt: "موصى به",
+    duration: "1h 45m",
+    description: "دورة نظام الشركة: بناء العمليات والأتمتة وتفويض المهام لتتحول مؤسستك إلى آلة عمل متقنة تدار بأقل تدخل شخصي.",
+    rating: 4.99,
+    lessons: [
+      {
+        id: "sys-1",
+        title: "بناء الأنظمة وتوحيد إجراءات العمل",
+        duration: "35:00",
+        videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        transcript: "كيف تنتقل من العمل الارتجالي إلى منظومة تشغيلية متكاملة تحقق أقصى إنتاجية بأقل جهد...",
+        chapters: [
+          { time: "00:00", title: "تشخيص الفوضى الإدارية" },
+          { time: "14:00", title: "صياغة وتوثيق إجراءات التشغيل القياسية (SOP)" },
+          { time: "25:00", title: "مؤشرات الأداء الرئيسية والتحكم" }
+        ]
+      }
+    ]
+  },
+  {
     id: "vc-1",
     title: "Maîtriser le Bilan Comptable & Compte de Résultat de A à Z",
     domain: "Comptabilité & Finance",

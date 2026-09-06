@@ -1,6 +1,7 @@
 {
-  "name": "BOTSCHAFT",
-  "description": "Professional Training Platform powered by AI for personalized learning in accounting, management, travel agency operations, and more.",
+  "name": "MARIN",
+  "description": "MARIN - Plateforme d'apprentissage et de formation professionnelle maritime.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
+
