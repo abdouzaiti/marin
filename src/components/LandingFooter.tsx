@@ -78,10 +78,10 @@ export const LandingFooter: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column: Contact Us */}
-          <div className="flex flex-col items-start text-left">
-            <h3 className="text-xl sm:text-2xl font-semibold text-white mb-4 tracking-tight">
-              Contact Us
+          {/* Right Column: Contact Us translated to Arabic */}
+          <div className="flex flex-col items-start text-right" dir="rtl">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 tracking-tight">
+              تواصل معنا
             </h3>
 
             <div className="flex flex-col gap-3 text-sm sm:text-base text-slate-200">
@@ -90,6 +90,7 @@ export const LandingFooter: React.FC = () => {
                 <a
                   href="mailto:marin.academy.dz@gmail.com"
                   className="flex items-center gap-3 text-white hover:text-sky-300 transition-colors cursor-pointer"
+                  dir="ltr"
                 >
                   <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0" />
                   <span>marin.academy.dz@gmail.com</span>
@@ -99,8 +100,8 @@ export const LandingFooter: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleCopyEmail}
-                  title={copiedEmail ? "Email copié !" : "Copier l'email"}
-                  aria-label="Copier l'adresse email"
+                  title={copiedEmail ? "تم النسخ!" : "نسخ البريد الإلكتروني"}
+                  aria-label="نسخ البريد الإلكتروني"
                   className={`p-1.5 rounded-md transition-all duration-200 cursor-pointer flex items-center justify-center ${
                     copiedEmail
                       ? "text-emerald-400 bg-emerald-500/20"
@@ -125,10 +126,10 @@ export const LandingFooter: React.FC = () => {
                 <span>+213 559 39 12 11</span>
               </a>
 
-              {/* Address details */}
-              <div className="flex flex-col pt-1 text-slate-200 text-sm sm:text-base leading-relaxed">
-                <span>Promotion Protazir, Ain Smara 25054,</span>
-                <span>Constantine, Ain Smara 25054, DZ</span>
+              {/* Address details in Arabic */}
+              <div className="flex flex-col pt-1 text-slate-200 text-sm sm:text-base leading-relaxed text-right">
+                <span>ترقية بروطازير، عين سمارة 25054،</span>
+                <span>قسنطينة، الجزائر</span>
               </div>
             </div>
           </div>

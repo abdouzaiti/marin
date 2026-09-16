@@ -25,7 +25,7 @@ export const YouTubeBottomNav: React.FC<YouTubeBottomNavProps> = ({
         }`}
       >
         <Home className={`w-5 h-5 mb-0.5 ${activeTab === "home" ? "text-blue-600 stroke-[2.5]" : "text-slate-600"}`} />
-        <span>Accueil</span>
+        <span>الرئيسية</span>
       </button>
 
       <button
@@ -35,18 +35,18 @@ export const YouTubeBottomNav: React.FC<YouTubeBottomNavProps> = ({
         }`}
       >
         <Compass className={`w-5 h-5 mb-0.5 ${activeTab === "explore" ? "text-blue-600 stroke-[2.5]" : "text-slate-600"}`} />
-        <span>Explorer</span>
+        <span>استكشاف</span>
       </button>
 
       <button
         onClick={() => {
           setActiveTab("home");
-          setSelectedCategory("Comptabilité & Finance");
+          setSelectedCategory("المحاسبة والمالية");
         }}
         className="flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
       >
         <FolderKanban className="w-5 h-5 mb-0.5 text-slate-600" />
-        <span>Filières</span>
+        <span>المسارات</span>
       </button>
 
       <button
@@ -56,7 +56,7 @@ export const YouTubeBottomNav: React.FC<YouTubeBottomNavProps> = ({
         }`}
       >
         <User className={`w-5 h-5 mb-0.5 ${activeTab === "profile" ? "text-blue-600 stroke-[2.5]" : "text-slate-600"}`} />
-        <span>Profil</span>
+        <span>حسابي</span>
       </button>
     </nav>
   );

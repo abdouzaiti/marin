@@ -210,17 +210,18 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType>({
-  language: "fr",
+  language: "ar",
   setLanguage: () => {},
-  t: (key) => translations.fr[key] || key,
-  isRTL: false,
+  t: (key) => translations.ar[key] || key,
+  isRTL: true,
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem("marin_lang");
-    if (saved === "ar" || saved === "en" || saved === "fr") return saved;
-    return "fr";
+    if (saved === "en") return saved;
+    // Default to Arabic for the app
+    return "ar";
   });
 
   const setLanguage = (lang: Language) => {

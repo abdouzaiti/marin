@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import { VideoCourse, YOUTUBE_CATEGORIES } from "../data/videoCourses";
+import React from "react";
+import { VideoCourse } from "../data/videoCourses";
 import { UserProfile } from "../types";
-import { Clock, Star, ArrowRight, Play, BookOpen, ChevronRight } from "lucide-react";
 import { LandingFooter } from "./LandingFooter";
 
 interface YouTubeHomeFeedProps {
@@ -17,13 +16,8 @@ interface YouTubeHomeFeedProps {
 
 export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
   courses,
-  selectedCategory,
-  setSelectedCategory,
-  searchQuery,
   selectCourse,
 }) => {
-  const [showAllCatalog, setShowAllCatalog] = useState(false);
-
   // The 3 exact featured courses matching the user image
   const primaryCourses = [
     {
@@ -63,14 +57,6 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
       tag: "company-system",
     },
   ];
-
-  const filteredCourses = courses.filter((c) => {
-    const matchesCategory = selectedCategory === "Tout" || c.domain.toLowerCase().includes(selectedCategory.toLowerCase());
-    const matchesSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          c.domain.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          c.instructor.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
 
   return (
     <div className="flex-1 bg-white text-slate-900 w-full">
@@ -224,85 +210,6 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
             );
           })}
         </div>
-
-        {/* Optional: Catalog Expander for full course catalog */}
-        <div className="mt-14 w-full flex flex-col items-center">
-          <button
-            onClick={() => setShowAllCatalog((prev) => !prev)}
-            className="px-6 py-2.5 rounded-full border border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs"
-          >
-            <span>{showAllCatalog ? "إخفاء باقي الدورات" : "عرض كل الدورات والبرامج التدريبية"}</span>
-            <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${showAllCatalog ? "-rotate-90" : "rotate-90"}`} />
-          </button>
-
-          {showAllCatalog && (
-            <div className="mt-10 w-full space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
-              {/* Category Pills Bar */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none justify-center flex-wrap">
-                {YOUTUBE_CATEGORIES.map((cat, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 shadow-xs ${
-                      selectedCategory === cat
-                        ? "bg-blue-600 text-white shadow-blue-600/20"
-                        : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              {/* Full Video Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-                {filteredCourses.map((course) => (
-                  <div
-                    key={course.id}
-                    onClick={() => selectCourse(course)}
-                    className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md hover:border-blue-500 transition-all cursor-pointer group flex flex-col justify-between"
-                  >
-                    <div className="relative aspect-video bg-slate-900 overflow-hidden">
-                      <img
-                        src={course.thumbnail}
-                        alt={course.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-2 right-2 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/10">
-                        {course.domain}
-                      </div>
-                      <div className="absolute bottom-2 left-2 bg-black/80 text-white text-[11px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {course.duration}
-                      </div>
-                    </div>
-
-                    <div className="p-4 space-y-2 flex-1 flex flex-col justify-between text-right">
-                      <h3 className="font-bold text-slate-900 text-sm line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
-                        {course.title}
-                      </h3>
-
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-2">
-                        <span className="text-amber-500 font-bold text-xs flex items-center gap-0.5 shrink-0">
-                          <Star className="w-3.5 h-3.5 fill-amber-400" /> {course.rating}
-                        </span>
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-xs text-slate-600 truncate font-medium">{course.instructor}</span>
-                          <img
-                            src={course.instructorAvatar}
-                            alt={course.instructor}
-                            className="w-6 h-6 rounded-full object-cover shrink-0"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
       </div>
 
       {/* Matching Dark Capsule Footer with Logo, Social Icons & Contact Details */}
