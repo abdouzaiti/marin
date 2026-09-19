@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Facebook, Linkedin, Instagram, Mail, Phone, Copy, Check } from "lucide-react";
+import { Facebook, Linkedin, Instagram, Mail, Phone, Copy, Check, MapPin } from "lucide-react";
 
 export const LandingFooter: React.FC = () => {
   const [copiedEmail, setCopiedEmail] = useState(false);
@@ -126,11 +126,20 @@ export const LandingFooter: React.FC = () => {
                 <span>+213 559 39 12 11</span>
               </a>
 
-              {/* Address details in Arabic */}
-              <div className="flex flex-col pt-1 text-slate-200 text-sm sm:text-base leading-relaxed text-right">
-                <span>ترقية بروطازير، عين سمارة 25054،</span>
-                <span>قسنطينة، الجزائر</span>
-              </div>
+              {/* Address details */}
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Cité+Zaghloul+Mostaganem"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="عرض على خرائط Google"
+                className="flex items-start gap-3 text-slate-200 hover:text-sky-300 transition-colors pt-1 cursor-pointer group text-right"
+              >
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0 mt-0.5 group-hover:text-sky-300 transition-colors" />
+                <div className="flex flex-col text-sm sm:text-base leading-relaxed">
+                  <span className="font-semibold text-white">حي زغلول، مستغانم</span>
+                  <span className="text-xs sm:text-sm text-slate-300">Cité Zaghloul, Mostaganem, Algérie</span>
+                </div>
+              </a>
             </div>
           </div>
 

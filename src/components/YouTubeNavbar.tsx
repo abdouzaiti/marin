@@ -51,7 +51,7 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
       <header className="w-full px-3 sm:px-6 pt-3 sm:pt-5 pb-2 bg-transparent select-none z-40">
         <div
           ref={bannerRef}
-          className="relative w-[1050px] max-w-full h-[150px] mx-auto rounded-[26px] bg-[#091f3a] text-white px-5 sm:px-8 py-3.5 sm:py-4 flex items-center justify-between shadow-xl border border-white/10"
+          className="relative w-[1050px] max-w-full h-[90px] mx-auto rounded-[26px] bg-[#091f3a] text-white px-5 sm:px-8 py-2.5 sm:py-3 flex items-center justify-between shadow-xl border border-white/10"
         >
           {/* Left Side: Action CTA Button */}
           <div className="flex items-center gap-2 sm:gap-3 z-10">
@@ -74,7 +74,7 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
                 layoutId="marin-academy-jumping-logo"
                 src="/logo.png"
                 alt="MARIN Academy"
-                className="h-[130px] w-[200px] object-contain select-none"
+                className="h-[75px] w-auto max-w-[170px] object-contain select-none"
                 animate={{ rotate: 0, scale: 1 }}
                 whileHover={{ rotate: 360, transition: { duration: 0.65, ease: "easeInOut" } }}
                 transition={{

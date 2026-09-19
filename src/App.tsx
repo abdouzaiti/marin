@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Mail, Phone, MapPin, ExternalLink } from "lucide-react";
 import { YouTubeNavbar } from "./components/YouTubeNavbar";
 import { YouTubeBottomNav } from "./components/YouTubeBottomNav";
 import { YouTubeHomeFeed } from "./components/YouTubeHomeFeed";
@@ -176,19 +177,43 @@ function MainApp() {
                 يسعدنا الرد على جميع استفساراتكم حول برامجنا ودوراتنا التدريبية المتخصصة.
               </p>
 
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <div className="flex items-center justify-end gap-3 font-semibold text-slate-900">
-                  <span>contact@marinacademy.pro</span>
-                  <span className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">✉</span>
-                </div>
-                <div className="flex items-center justify-end gap-3 font-semibold text-slate-900">
-                  <span dir="ltr">+33 1 89 71 24 50 / +213 550 12 34 56</span>
-                  <span className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">📞</span>
-                </div>
-                <div className="flex items-center justify-end gap-3 font-semibold text-slate-900">
-                  <span>الجزائر العاصمة & باريس</span>
-                  <span className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">📍</span>
-                </div>
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3.5 text-right">
+                <a
+                  href="mailto:marin.academy.dz@gmail.com"
+                  className="flex items-center justify-end gap-3 font-semibold text-slate-900 hover:text-blue-600 transition-colors group cursor-pointer"
+                  dir="ltr"
+                >
+                  <span className="text-sm font-medium">marin.academy.dz@gmail.com</span>
+                  <span className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Mail className="w-4 h-4" />
+                  </span>
+                </a>
+
+                <a
+                  href="tel:+213559391211"
+                  className="flex items-center justify-end gap-3 font-semibold text-slate-900 hover:text-emerald-600 transition-colors group cursor-pointer"
+                  dir="ltr"
+                >
+                  <span className="text-sm font-medium">+213 559 39 12 11</span>
+                  <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Phone className="w-4 h-4" />
+                  </span>
+                </a>
+
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Cité+Zaghloul+Mostaganem"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-end gap-3 font-semibold text-slate-900 hover:text-amber-600 transition-colors group cursor-pointer"
+                >
+                  <div className="flex flex-col text-right">
+                    <span className="text-sm font-bold">حي زغلول، مستغانم</span>
+                    <span className="text-xs text-slate-500 font-normal">Cité Zaghloul, Mostaganem, Algérie</span>
+                  </div>
+                  <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <MapPin className="w-4 h-4" />
+                  </span>
+                </a>
               </div>
 
               <div className="pt-2">
