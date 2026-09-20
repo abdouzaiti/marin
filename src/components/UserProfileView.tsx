@@ -219,10 +219,10 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
 
             <div className="p-4 rounded-xl bg-purple-50/50 border border-purple-100 flex flex-col items-center text-center space-y-1.5">
               <div className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                🤖
+                🎯
               </div>
-              <p className="font-bold text-xs text-slate-900">Tuteur Interactif</p>
-              <p className="text-[10px] text-slate-500">Questions posées à l'IA</p>
+              <p className="font-bold text-xs text-slate-900">Apprentissage Continu</p>
+              <p className="text-[10px] text-slate-500">Validation assidue des modules</p>
             </div>
           </div>
         </div>

@@ -80,6 +80,7 @@ function MainApp() {
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
               searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
               selectCourse={handleSelectCourse}
               openStudio={() => setStudioOpen(true)}
               userProfile={userProfile}
@@ -93,6 +94,7 @@ function MainApp() {
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
               searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
               selectCourse={handleSelectCourse}
               openStudio={() => setStudioOpen(true)}
               userProfile={userProfile}

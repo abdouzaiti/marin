@@ -48,19 +48,19 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
   return (
     <>
       {/* 1. Main Big Hero Banner Header Section (Targeted element) */}
-      <header className="w-full px-3 sm:px-6 pt-3 sm:pt-5 pb-2 bg-transparent select-none z-40">
+      <header className="w-full px-2 sm:px-6 pt-2 sm:pt-5 pb-2 bg-transparent select-none z-40">
         <div
           ref={bannerRef}
-          className="relative w-[1050px] max-w-full h-[90px] mx-auto rounded-[26px] bg-[#091f3a] text-white px-5 sm:px-8 py-2.5 sm:py-3 flex items-center justify-between shadow-xl border border-white/10"
+          className="relative w-[1400px] max-w-full h-[79px] mx-auto rounded-[20px] sm:rounded-[26px] bg-[#091f3a] text-white px-3 sm:px-6 md:px-8 py-1.5 sm:py-2.5 flex items-center justify-between shadow-xl border border-white/10"
         >
           {/* Left Side: Action CTA Button */}
-          <div className="flex items-center gap-2 sm:gap-3 z-10">
+          <div className="flex items-center gap-1.5 sm:gap-3 z-10 shrink-0">
             <button
               onClick={() => setActiveTab("register")}
-              className="rounded-full bg-[#0062c4] hover:bg-[#0070e0] text-white font-bold text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5 flex items-center gap-2 shadow-md shadow-blue-900/30 hover:shadow-blue-500/20 active:scale-98 transition-all cursor-pointer"
+              className="rounded-full bg-[#0062c4] hover:bg-[#0070e0] text-white font-bold text-[11px] sm:text-xs md:text-sm px-2.5 sm:px-5 md:px-6 py-1.5 sm:py-2 md:py-2.5 flex items-center gap-1 sm:gap-2 shadow-md shadow-blue-900/30 hover:shadow-blue-500/20 active:scale-98 transition-all cursor-pointer"
             >
               <span>ابدأ الآن</span>
-              <ArrowRight className="w-4 h-4 text-white" />
+              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
             </button>
           </div>
 
@@ -74,7 +74,7 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
                 layoutId="marin-academy-jumping-logo"
                 src="/logo.png"
                 alt="MARIN Academy"
-                className="h-[75px] w-auto max-w-[170px] object-contain select-none"
+                className="h-[46px] sm:h-[58px] md:h-[64px] w-auto max-w-[115px] sm:max-w-[150px] md:max-w-[170px] object-contain select-none"
                 animate={{ rotate: 0, scale: 1 }}
                 whileHover={{ rotate: 360, transition: { duration: 0.65, ease: "easeInOut" } }}
                 transition={{
@@ -91,8 +91,34 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
             )}
           </div>
 
-          {/* Right Side spacer */}
-          <div className="flex items-center gap-4 sm:gap-7 z-10" />
+          {/* Right Side Nav Links */}
+          <div className="flex items-center gap-1 sm:gap-3 md:gap-4 z-10 shrink-0">
+            <button
+              onClick={() => {
+                setActiveTab("home");
+                scrollToTop();
+              }}
+              className="text-white hover:text-blue-300 font-bold text-xs sm:text-sm px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full hover:bg-white/10 transition-colors cursor-pointer hidden sm:block"
+            >
+              الرئيسية
+            </button>
+            {onOpenAbout && (
+              <button
+                onClick={onOpenAbout}
+                className="text-slate-200 hover:text-white transition-colors text-xs sm:text-sm font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full hover:bg-white/10 cursor-pointer hidden md:block"
+              >
+                من نحن
+              </button>
+            )}
+            {onOpenContact && (
+              <button
+                onClick={onOpenContact}
+                className="text-slate-200 hover:text-white transition-colors text-xs sm:text-sm font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full hover:bg-white/10 cursor-pointer hidden sm:block"
+              >
+                تواصل معنا
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -100,17 +126,17 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
       <AnimatePresence>
         {isScrolledPast && (
           <motion.div
-            initial={{ y: -70, opacity: 0 }}
+            initial={{ y: -79, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -70, opacity: 0 }}
+            exit={{ y: -79, opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed top-0 left-0 right-0 z-50 h-16 bg-[#091f3a]/95 backdrop-blur-md shadow-2xl border-b border-white/10 px-4 sm:px-8 flex items-center justify-between"
+            className="fixed top-0 left-0 right-0 z-50 h-[79px] bg-[#091f3a]/95 backdrop-blur-md shadow-2xl border-b border-white/10 px-3 sm:px-6 md:px-8 flex items-center justify-between"
           >
             {/* Left: Quick Action Button */}
-            <div className="flex items-center gap-2 sm:gap-3 z-10">
+            <div className="flex items-center gap-1.5 sm:gap-3 z-10 shrink-0">
               <button
                 onClick={() => setActiveTab("register")}
-                className="rounded-full bg-[#0062c4] hover:bg-[#0070e0] text-white font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-2 flex items-center gap-1.5 sm:gap-2 shadow-md shadow-blue-900/40 hover:shadow-blue-500/25 active:scale-98 transition-all cursor-pointer"
+                className="rounded-full bg-[#0062c4] hover:bg-[#0070e0] text-white font-bold text-[11px] sm:text-xs md:text-sm px-2.5 sm:px-5 py-1.5 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-md shadow-blue-900/40 hover:shadow-blue-500/25 active:scale-98 transition-all cursor-pointer"
               >
                 <span>ابدأ الآن</span>
                 <ArrowRight className="w-3.5 h-3.5 text-white" />
@@ -129,7 +155,7 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
                 layoutId="marin-academy-jumping-logo"
                 src="/logo.png"
                 alt="MARIN Academy"
-                className="h-10 sm:h-12 w-auto max-w-[160px] sm:max-w-[200px] object-contain select-none"
+                className="h-8 sm:h-11 md:h-12 w-auto max-w-[110px] sm:max-w-[160px] md:max-w-[200px] object-contain select-none"
                 animate={{ rotate: 360, scale: 1 }}
                 whileHover={{ rotate: 720, transition: { duration: 0.65, ease: "easeInOut" } }}
                 transition={{
@@ -146,11 +172,20 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
             </div>
 
             {/* Right: Quick Links / Contact Modal trigger */}
-            <div className="flex items-center gap-2 sm:gap-3 z-10">
+            <div className="flex items-center gap-1 sm:gap-3 z-10 shrink-0">
+              <button
+                onClick={() => {
+                  setActiveTab("home");
+                  scrollToTop();
+                }}
+                className="text-white hover:text-blue-300 font-bold text-xs sm:text-sm px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full hover:bg-white/10 transition-colors cursor-pointer hidden sm:block"
+              >
+                الرئيسية
+              </button>
               {onOpenContact && (
                 <button
                   onClick={onOpenContact}
-                  className="text-slate-200 hover:text-white transition-colors text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full hover:bg-white/10 cursor-pointer"
+                  className="text-slate-200 hover:text-white transition-colors text-xs sm:text-sm font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full hover:bg-white/10 cursor-pointer hidden sm:block"
                 >
                   تواصل معنا
                 </button>
