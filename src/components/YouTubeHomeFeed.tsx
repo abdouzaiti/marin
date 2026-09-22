@@ -18,19 +18,8 @@ interface YouTubeHomeFeedProps {
 
 export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
   courses,
-  searchQuery,
-  setSearchQuery,
   selectCourse,
 }) => {
-  const [localSearch, setLocalSearch] = useState<string>(searchQuery || "");
-
-  const handleSearchChange = (val: string) => {
-    setLocalSearch(val);
-    if (setSearchQuery) {
-      setSearchQuery(val);
-    }
-  };
-
   // The 3 featured courses matching the curriculum
   const primaryCourses = useMemo(() => [
     {
@@ -71,161 +60,15 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
     },
   ], []);
 
-  // Filter primary courses based on search query
-  const filteredPrimaryCourses = useMemo(() => {
-    const query = localSearch.trim().toLowerCase();
-    if (!query) return primaryCourses;
-
-    return primaryCourses.filter((item) => {
-      const courseData = courses[item.courseIndex];
-      const matchTitle = item.title.toLowerCase().includes(query);
-      const matchSub1 = item.subtitleLine1.toLowerCase().includes(query);
-      const matchSub2 = item.subtitleLine2.toLowerCase().includes(query);
-      const matchCourseTitle = courseData?.title.toLowerCase().includes(query) ?? false;
-      const matchDesc = courseData?.description.toLowerCase().includes(query) ?? false;
-      const matchDomain = courseData?.domain.toLowerCase().includes(query) ?? false;
-      const matchInstructor = courseData?.instructor.toLowerCase().includes(query) ?? false;
-
-      return (
-        matchTitle ||
-        matchSub1 ||
-        matchSub2 ||
-        matchCourseTitle ||
-        matchDesc ||
-        matchDomain ||
-        matchInstructor
-      );
-    });
-  }, [localSearch, courses, primaryCourses]);
-
-  // Also check if any additional courses in catalog match
-  const otherMatchedCourses = useMemo(() => {
-    const query = localSearch.trim().toLowerCase();
-    if (!query) return [];
-
-    return courses.filter((c, idx) => {
-      if (idx < 3) return false;
-      return (
-        c.title.toLowerCase().includes(query) ||
-        c.description.toLowerCase().includes(query) ||
-        c.domain.toLowerCase().includes(query) ||
-        c.instructor.toLowerCase().includes(query)
-      );
-    });
-  }, [localSearch, courses]);
-
   return (
     <div className="flex-1 bg-white text-slate-900 w-full">
       
       {/* Hero Content Area */}
-      <div className="pt-4 sm:pt-8 pb-12 sm:pb-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center">
-        
-        {/* Academy Header */}
-        <div className="text-center space-y-1 sm:space-y-2 mb-6" dir="rtl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#0062c4] text-xs font-bold mb-1">
-            <span>دورات أكاديمية مارين</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#041d37] tracking-tight">
-            الدورات والبرامج التدريبية
-          </h2>
-        </div>
-
-        {/* Search Bar for Searching Courses (شريط البحث في الدورات) */}
-        <div className="w-full max-w-xl mx-auto mb-8 sm:mb-12 px-1">
-          <div className="relative flex items-center bg-white rounded-full border border-slate-200/90 shadow-sm hover:border-slate-300 focus-within:border-[#0062c4] focus-within:ring-4 focus-within:ring-[#0062c4]/15 transition-all duration-200 px-3.5 sm:px-5 py-2 sm:py-2.5">
-            {/* Search Icon */}
-            <div className="flex items-center justify-center text-slate-400 pl-1.5 sm:pl-2 shrink-0">
-              <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 group-focus-within:text-[#0062c4]" />
-            </div>
-
-            {/* Input Element */}
-            <input
-              type="text"
-              value={localSearch}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="ابحث عن دورة تدريبية (المالية، التسويق، نظام الشركة...)"
-              className="flex-1 bg-transparent px-2 sm:px-3 py-1 text-xs sm:text-sm md:text-base text-slate-900 placeholder:text-slate-400 focus:outline-hidden text-right font-medium"
-              dir="rtl"
-            />
-
-            {/* Clear Button */}
-            {localSearch && (
-              <button
-                onClick={() => handleSearchChange("")}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 ml-1"
-                aria-label="مسح البحث"
-                title="مسح البحث"
-              >
-                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Quick Filter Suggestion Pills */}
-          <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-3 flex-wrap text-xs" dir="rtl">
-            <span className="text-slate-400 font-medium ml-1 text-[11px] sm:text-xs">اقتراحات :</span>
-            {[
-              { label: "الكل", query: "" },
-              { label: "المالية الذكية", query: "المالية" },
-              { label: "التسويق الاستراتيجي", query: "التسويق" },
-              { label: "نظام الشركة", query: "نظام" },
-            ].map((tag, idx) => {
-              const isActive = (tag.query === "" && !localSearch) || (tag.query !== "" && localSearch.includes(tag.query));
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleSearchChange(tag.query)}
-                  className={`px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-[#091f3a] text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                  }`}
-                >
-                  {tag.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Search Result Counter when searching */}
-          {localSearch.trim() && (
-            <div className="flex items-center justify-between text-xs text-slate-500 mt-2.5 px-3" dir="rtl">
-              <span>
-                نتائج البحث عن : <strong className="text-[#041d37]">"{localSearch}"</strong>
-              </span>
-              <span>
-                {filteredPrimaryCourses.length + otherMatchedCourses.length} {filteredPrimaryCourses.length + otherMatchedCourses.length === 1 ? "دورة تدريبية" : "دورات تدريبية"}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Empty State when no course matches search */}
-        {filteredPrimaryCourses.length === 0 && otherMatchedCourses.length === 0 && (
-          <div className="w-full max-w-md mx-auto text-center py-12 px-4 space-y-3" dir="rtl">
-            <div className="w-14 h-14 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-              <Search className="w-7 h-7" />
-            </div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-800">
-              لم يتم العثور على دورات تطابق "{localSearch}"
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-500">
-              جرّب البحث بكلمات أخرى مثل "المالية"، "التسويق"، أو "نظام".
-            </p>
-            <button
-              onClick={() => handleSearchChange("")}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-50 text-[#0062c4] font-bold text-xs sm:text-sm hover:bg-blue-100 transition-colors cursor-pointer"
-            >
-              عرض جميع الدورات
-            </button>
-          </div>
-        )}
+      <div className="pt-8 sm:pt-12 pb-12 sm:pb-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center">
 
         {/* Featured Course Cards Grid */}
-        {filteredPrimaryCourses.length > 0 && (
-          <div className={`w-full grid grid-cols-1 ${filteredPrimaryCourses.length === 1 ? "max-w-md" : filteredPrimaryCourses.length === 2 ? "md:grid-cols-2 max-w-5xl" : "md:grid-cols-3 max-w-7xl"} gap-4 sm:gap-6 lg:gap-8 mx-auto`}>
-            {filteredPrimaryCourses.map((item, idx) => {
+        <div className="w-full grid grid-cols-1 md:grid-cols-3 max-w-7xl gap-4 sm:gap-6 lg:gap-8 mx-auto">
+          {primaryCourses.map((item, idx) => {
             const courseData = courses[item.courseIndex] || courses[0];
 
             return (
@@ -338,35 +181,6 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
             );
           })}
         </div>
-        )}
-
-        {/* Additional courses matching query if any */}
-        {otherMatchedCourses.length > 0 && (
-          <div className="w-full mt-10 max-w-7xl mx-auto space-y-4" dir="rtl">
-            <h3 className="text-base sm:text-lg font-bold text-[#041d37]">دورات إضافية مطابقة للبحث :</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {otherMatchedCourses.map((c) => (
-                <div
-                  key={c.id}
-                  onClick={() => selectCourse(c)}
-                  className="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between"
-                >
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full inline-block">
-                      {c.domain}
-                    </span>
-                    <h4 className="font-bold text-slate-900 text-sm">{c.title}</h4>
-                    <p className="text-xs text-slate-600 line-clamp-2">{c.description}</p>
-                  </div>
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 mt-3">
-                    <span>{c.instructor}</span>
-                    <span className="font-bold text-[#0062c4] hover:underline">مشاهدة الدورة ←</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Matching Dark Capsule Footer with Logo, Social Icons & Contact Details */}

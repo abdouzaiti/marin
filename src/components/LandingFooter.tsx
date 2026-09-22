@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Facebook, Linkedin, Instagram, Mail, Phone, Copy, Check, MapPin } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 export const LandingFooter: React.FC<{ onOpenContact?: () => void; onOpenAbout?: () => void }> = () => {
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const { t, language } = useLanguage();
 
   const handleCopyEmail = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,11 +74,11 @@ export const LandingFooter: React.FC<{ onOpenContact?: () => void; onOpenAbout?:
               <img
                 src="/logo.png"
                 alt="MARIN Academy"
-                className="h-[80px] sm:h-[120px] md:h-[150px] w-auto max-w-[160px] sm:max-w-[190px] object-contain select-none brightness-105"
+                className="h-[80px] sm:h-[120px] md:h-[150px] w-auto max-w-[160px] sm:max-w-[190px] object-contain select-none brightness-0 invert"
               />
 
               {/* Social Media Icons row: Facebook, LinkedIn, Instagram */}
-              <div className="flex items-center gap-4 sm:gap-5 mt-4 sm:mt-6 md:mt-[33px] pl-1 sm:pl-[20px] md:pl-[37px] text-white">
+              <div className="flex items-center gap-4 sm:gap-5 mt-4 sm:mt-6 md:mt-[33px] text-white">
                 <a
                   href="https://facebook.com"
                   target="_blank"
@@ -110,9 +112,9 @@ export const LandingFooter: React.FC<{ onOpenContact?: () => void; onOpenAbout?:
             </div>
 
             {/* Right Column: Contact Us */}
-            <div className="flex flex-col items-start text-right w-full sm:w-auto" dir="rtl">
+            <div className={`flex flex-col items-start ${language === "ar" ? "text-right" : "text-left"} w-full sm:w-auto`} dir={language === "ar" ? "rtl" : "ltr"}>
               <h3 className="text-xl sm:text-2xl font-black text-white mb-3 sm:mb-4 tracking-tight">
-                تواصل معنا
+                {t("contactUsHeading")}
               </h3>
 
               <div className="flex flex-col gap-3 text-xs sm:text-sm md:text-base text-white/95 w-full font-medium">
@@ -163,7 +165,7 @@ export const LandingFooter: React.FC<{ onOpenContact?: () => void; onOpenAbout?:
                   target="_blank"
                   rel="noopener noreferrer"
                   title="عرض على خرائط Google"
-                  className="flex items-start gap-2.5 text-white/95 hover:text-[#041d37] transition-colors pt-1 cursor-pointer group text-right"
+                  className={`flex items-start gap-2.5 text-white/95 hover:text-[#041d37] transition-colors pt-1 cursor-pointer group ${language === "ar" ? "text-right" : "text-left"}`}
                 >
                   <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                   <div className="flex flex-col text-xs sm:text-sm md:text-base leading-relaxed">

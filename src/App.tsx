@@ -68,7 +68,15 @@ function MainApp() {
         userProfile={userProfile}
         setUserProfile={setUserProfile}
         onOpenContact={() => setContactModalOpen(true)}
-        onOpenAbout={() => setAboutModalOpen(true)}
+        onOpenAbout={() => {
+          setActiveTab("home");
+          setTimeout(() => {
+            const el = document.getElementById("about-section");
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth" });
+            }
+          }, 100);
+        }}
       />
 
       <div className={`flex flex-1 w-full pb-14 md:pb-0 ${activeTab !== "home" ? "pt-16 sm:pt-18" : "pt-0"}`}>

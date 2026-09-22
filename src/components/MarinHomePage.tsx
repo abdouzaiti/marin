@@ -14,17 +14,16 @@ import {
   Layers,
   ChevronLeft,
   Video,
-  Play,
   Building2,
   Handshake,
   Network,
   Globe,
-  Compass,
   Share2
 } from "lucide-react";
 import { motion } from "motion/react";
 import { VideoCourse } from "../data/videoCourses";
 import { LandingFooter } from "./LandingFooter";
+import { useLanguage } from "../context/LanguageContext";
 
 interface MarinHomePageProps {
   onExploreAcademy: () => void;
@@ -44,9 +43,10 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
   setActiveTab
 }) => {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const { t, language } = useLanguage();
 
   return (
-    <div className="flex-1 bg-white text-slate-900 w-full flex flex-col selection:bg-blue-600 selection:text-white relative overflow-hidden" dir="rtl">
+    <div className="flex-1 bg-white text-slate-900 w-full flex flex-col selection:bg-blue-600 selection:text-white relative overflow-hidden" dir={language === "ar" ? "rtl" : "ltr"}>
       
       {/* 1. HERO SECTION WITH PRO BLUE WAVES BACKGROUND in #1d8ccc */}
       <section className="relative overflow-hidden bg-[#1d8ccc] text-white pt-24 sm:pt-32 pb-20 sm:pb-28 px-4 sm:px-6 lg:px-10">
@@ -123,20 +123,17 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
             
-            {/* RIGHT COLUMN (RTL): Compelling Typography & CTAs */}
-            <div className="lg:col-span-6 xl:col-span-7 text-right space-y-6 sm:space-y-7">
+            {/* RIGHT COLUMN (RTL/LTR): Compelling Typography & CTAs */}
+            <div className={`lg:col-span-6 xl:col-span-7 ${language === "ar" ? "text-right" : "text-left"} space-y-6 sm:space-y-7`}>
               
               {/* Main Headline with Custom Highlight Badge */}
               <div className="space-y-3">
                 <h1 className="text-3xl sm:text-5xl xl:text-6xl font-black text-white tracking-tight leading-[1.25]">
-                  تعلّم الريادة والأعمال <br className="hidden sm:inline" />
-                  <span className="inline-block text-white mt-1 sm:mt-2">
-                    بالتطبيق العملي
-                  </span>
+                  {t("heroTitle")}
                 </h1>
 
                 <p className="text-base sm:text-lg md:text-xl text-white/95 font-medium leading-relaxed pt-2 max-w-xl">
-                  نُقدم <span className="relative font-bold text-white underline decoration-white/60 decoration-2 underline-offset-4">دورات تدريبية</span> متخصصة في مجالات الإدارة والمالية الذكية والتسويق، بأسلوب تدريبي يركز على التطبيق العملي وبناء ونمو الشركات.
+                  {t("heroSubtitle")}
                 </p>
               </div>
 
@@ -147,7 +144,7 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                   className="px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#041d37] hover:bg-[#072a4f] text-white font-bold text-sm sm:text-base shadow-xl shadow-[#041d37]/30 transition-all transform active:scale-98 cursor-pointer flex items-center gap-2"
                 >
                   <BookOpen className="w-4 h-4" />
-                  <span>استعراض الدورات</span>
+                  <span>{t("browseCourses")}</span>
                 </button>
 
                 {onOpenAbout && (
@@ -155,18 +152,11 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                     onClick={onOpenAbout}
                     className="px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-sm sm:text-base border-2 border-white/50 shadow-sm transition-all cursor-pointer backdrop-blur-xs"
                   >
-                    <span>من نحن</span>
+                    <span>{t("aboutUs")}</span>
                   </button>
                 )}
 
-                <button
-                  onClick={() => {
-                    if (setActiveTab) setActiveTab("register");
-                  }}
-                  className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-full text-white hover:text-white font-bold text-xs sm:text-sm hover:bg-white/20 transition-colors cursor-pointer"
-                >
-                  <span>انضم إلينا ←</span>
-                </button>
+
               </div>
             </div>
 
@@ -210,13 +200,13 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                   className="absolute -top-3 sm:-top-5 -right-2 sm:-right-4 z-20 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-xl border border-slate-100/80 flex items-center gap-2.5"
                 >
                   <div className="flex -space-x-2 overflow-hidden shrink-0">
+                    <span className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-[#041d37] flex items-center justify-center text-[10px] text-white font-bold">M</span>
                     <span className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-[#1d8ccc] flex items-center justify-center text-[10px] text-white font-bold">A</span>
-                    <span className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-rose-500 flex items-center justify-center text-[10px] text-white font-bold">M</span>
-                    <span className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-amber-500 flex items-center justify-center text-[10px] text-white font-bold">S</span>
+                    <span className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-[#38bdf8] flex items-center justify-center text-[10px] text-[#041d37] font-bold">R</span>
                   </div>
                   <div className="text-right">
                     <p className="text-xs sm:text-sm font-black text-slate-900 leading-tight">+15,000</p>
-                    <p className="text-[10px] text-slate-500 font-semibold">متدرب نشط</p>
+                    <p className="text-[10px] text-slate-500 font-semibold">{t("activeTrainees")}</p>
                   </div>
                 </motion.div>
 
@@ -232,7 +222,7 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                   </div>
                   <div className="text-right">
                     <p className="text-xs sm:text-sm font-black text-slate-900 leading-tight">+1,500</p>
-                    <p className="text-[10px] text-slate-500 font-semibold">محاضرة مسجلة</p>
+                    <p className="text-[10px] text-slate-500 font-semibold">{t("recordedLectures")}</p>
                   </div>
                 </motion.div>
 
@@ -256,7 +246,7 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
       </section>
 
       {/* 2. "تعرف علينا" SECTION (About MARIN & The 3 Core Ecosystem Branches) */}
-      <section className="py-14 sm:py-24 bg-gradient-to-b from-white via-slate-50/70 to-white px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <section id="about-section" className="py-14 sm:py-24 bg-gradient-to-b from-white via-slate-50/70 to-white px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         
         {/* Subtle Background Glows */}
         <div className="absolute top-1/4 right-1/2 translate-x-1/2 w-[600px] h-[600px] bg-blue-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
@@ -265,74 +255,53 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
           
           {/* Section Header */}
           <div className="text-center space-y-3">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 text-[#1d8ccc] text-xs font-bold mb-1">
+              <span>{t("aboutUs")}</span>
+            </div>
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#041d37] tracking-tight">
-              ركائز منظومة <span className="text-[#1d8ccc]">MARIN</span>
+              {t("ecosystemTitle")}
             </h2>
             <p className="text-xs sm:text-base text-slate-600 max-w-2xl mx-auto font-medium leading-relaxed">
-              منظومة متكاملة لرواد الأعمال وأصحاب المشاريع تجمع بين التدريب التطبيقي، نادي الأعمال، وشبكة العلاقات الاستثمارية في الجزائر
+              {t("ecosystemSubtitle")}
             </p>
           </div>
 
           {/* ===== ARTISTIC ILLUSTRATIVE 3 BRANCHES ECOSYSTEM ===== */}
-          <div className="relative pt-6 pb-10">
+          <div className="relative pt-2 pb-6">
 
-            {/* 1. ARTISTIC CENTRAL LOGO HUB (Sculpted Floating Island) */}
-            <div className="flex flex-col items-center justify-center relative z-20">
-              
-              {/* Radial Aura Behind Center */}
-              <div className="absolute w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-gradient-to-tr from-blue-400/20 via-sky-300/25 to-emerald-300/20 blur-2xl pointer-events-none -z-10" />
-
-              <motion.div 
-                initial={{ scale: 0.85, opacity: 0, y: -10 }}
-                whileInView={{ scale: 1, opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="relative group cursor-default"
-              >
-                {/* Organic Sculpted Outer Glow Frame */}
-                <div className="relative bg-gradient-to-b from-white via-white/95 to-slate-50/90 backdrop-blur-xl p-7 sm:p-9 rounded-[42px] sm:rounded-[50px] shadow-[0_20px_50px_rgba(29,140,204,0.15)] border-2 border-white flex flex-col items-center justify-center max-w-xs sm:max-w-sm text-center transform transition-transform duration-500 hover:scale-105">
-                  
-                  {/* Subtle Organic Inner Accent Rings */}
-                  <div className="absolute inset-2 rounded-[36px] sm:rounded-[44px] border border-blue-100/60 pointer-events-none" />
-
-                  {/* Logo Display with enhanced sizing */}
-                  <img
-                    src="/logo.png"
-                    alt="MARIN Logo"
-                    className="h-24 sm:h-32 w-auto object-contain drop-shadow-lg select-none transition-transform duration-500 group-hover:scale-105"
-                  />
-
-                  {/* Decorative glowing bottom droplet node */}
-                  <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-gradient-to-b from-[#1d8ccc] to-blue-700 shadow-lg border-2 border-white flex items-center justify-center">
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  </div>
+            {/* Glowing Origin Node at Title Base */}
+            <div className="flex justify-center -mb-2 relative z-20">
+              <div className="relative">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#0062c4] via-[#1d8ccc] to-[#38bdf8] shadow-lg shadow-blue-500/30 flex items-center justify-center border-2 border-white">
+                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
                 </div>
-              </motion.div>
+                <div className="absolute -inset-2 rounded-full bg-blue-400/20 blur-md pointer-events-none" />
+              </div>
             </div>
 
-            {/* 2. ARTISTIC ORGANIC FLOWING BRANCH LINES (Illustrated Curving SVG Rivers) */}
-            <div className="hidden lg:block relative w-full h-36 -my-4 pointer-events-none z-10">
-              <svg className="w-full h-full" viewBox="0 0 1000 140" fill="none" preserveAspectRatio="none">
+            {/* 2. ARTISTIC ORGANIC FLOWING BRANCH LINES (Illustrated Curving SVG Rivers branching directly from title) */}
+            <div className="hidden lg:block relative w-full h-28 -my-2 pointer-events-none z-10">
+              <svg className="w-full h-full" viewBox="0 0 1000 110" fill="none" preserveAspectRatio="none">
                 <defs>
-                  {/* Branch 1: Emerald Gradient */}
-                  <linearGradient id="branchEmerald" x1="500" y1="0" x2="160" y2="140" gradientUnits="userSpaceOnUse">
+                  {/* Branch 1: Deep Executive Navy & MARIN Blue Gradient */}
+                  <linearGradient id="branchNavy" x1="500" y1="0" x2="160" y2="110" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" stopColor="#1d8ccc" stopOpacity="0.9" />
-                    <stop offset="40%" stopColor="#10b981" stopOpacity="0.8" />
-                    <stop offset="100%" stopColor="#059669" stopOpacity="1" />
+                    <stop offset="60%" stopColor="#0a2540" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#041d37" stopOpacity="1" />
                   </linearGradient>
 
-                  {/* Branch 2: Center Blue Gradient */}
-                  <linearGradient id="branchBlue" x1="500" y1="0" x2="500" y2="140" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#1d8ccc" stopOpacity="1" />
-                    <stop offset="60%" stopColor="#0284c7" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="#2563eb" stopOpacity="1" />
+                  {/* Branch 2: Signature MARIN Blue Gradient */}
+                  <linearGradient id="branchBlue" x1="500" y1="0" x2="500" y2="110" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
+                    <stop offset="50%" stopColor="#1d8ccc" stopOpacity="1" />
+                    <stop offset="100%" stopColor="#0062c4" stopOpacity="1" />
                   </linearGradient>
 
-                  {/* Branch 3: Amber / Sunset Gradient */}
-                  <linearGradient id="branchAmber" x1="500" y1="0" x2="840" y2="140" gradientUnits="userSpaceOnUse">
+                  {/* Branch 3: Deep Sapphire Blue Gradient */}
+                  <linearGradient id="branchSapphire" x1="500" y1="0" x2="840" y2="110" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" stopColor="#1d8ccc" stopOpacity="0.9" />
-                    <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.8" />
-                    <stop offset="100%" stopColor="#d97706" stopOpacity="1" />
+                    <stop offset="50%" stopColor="#0284c7" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#0f3357" stopOpacity="1" />
                   </linearGradient>
 
                   {/* Soft Line Glow Filters */}
@@ -344,72 +313,72 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
 
                 {/* Ambient Soft Glow River Traces */}
                 <path
-                  d="M 500,10 C 470,65 240,40 160,135"
-                  stroke="url(#branchEmerald)"
+                  d="M 500,5 C 470,45 240,30 160,105"
+                  stroke="url(#branchNavy)"
                   strokeWidth="8"
-                  strokeOpacity="0.25"
+                  strokeOpacity="0.2"
                   strokeLinecap="round"
                 />
                 <path
-                  d="M 500,10 C 500,50 500,90 500,135"
+                  d="M 500,5 C 500,40 500,70 500,105"
                   stroke="url(#branchBlue)"
                   strokeWidth="8"
                   strokeOpacity="0.25"
                   strokeLinecap="round"
                 />
                 <path
-                  d="M 500,10 C 530,65 760,40 840,135"
-                  stroke="url(#branchAmber)"
+                  d="M 500,5 C 530,45 760,30 840,105"
+                  stroke="url(#branchSapphire)"
                   strokeWidth="8"
-                  strokeOpacity="0.25"
+                  strokeOpacity="0.2"
                   strokeLinecap="round"
                 />
 
                 {/* Primary Artistic Swirling Curves */}
                 <path
-                  d="M 500,10 C 470,65 240,40 160,135"
-                  stroke="url(#branchEmerald)"
+                  d="M 500,5 C 470,45 240,30 160,105"
+                  stroke="url(#branchNavy)"
                   strokeWidth="3.5"
                   strokeLinecap="round"
                   filter="url(#glowLine)"
                 />
                 <path
-                  d="M 500,10 C 500,50 500,90 500,135"
+                  d="M 500,5 C 500,40 500,70 500,105"
                   stroke="url(#branchBlue)"
                   strokeWidth="3.5"
                   strokeLinecap="round"
                   filter="url(#glowLine)"
                 />
                 <path
-                  d="M 500,10 C 530,65 760,40 840,135"
-                  stroke="url(#branchAmber)"
+                  d="M 500,5 C 530,45 760,30 840,105"
+                  stroke="url(#branchSapphire)"
                   strokeWidth="3.5"
                   strokeLinecap="round"
                   filter="url(#glowLine)"
                 />
 
-                {/* Artistic Floating Stream Particle Accents */}
-                <circle cx="340" cy="48" r="3" fill="#10b981" />
-                <circle cx="230" cy="78" r="4.5" fill="#34d399" />
+                {/* Artistic Floating Stream Particle Accents in Brand Tones */}
+                <circle cx="340" cy="38" r="3" fill="#0284c7" />
+                <circle cx="230" cy="62" r="4" fill="#38bdf8" />
                 
-                <circle cx="500" cy="70" r="3.5" fill="#38bdf8" />
+                <circle cx="500" cy="55" r="3.5" fill="#1d8ccc" />
                 
-                <circle cx="660" cy="48" r="3" fill="#f59e0b" />
-                <circle cx="770" cy="78" r="4.5" fill="#fbbf24" />
+                <circle cx="660" cy="38" r="3" fill="#0284c7" />
+                <circle cx="770" cy="62" r="4" fill="#38bdf8" />
 
                 {/* Terminal Branch Anchors with glowing nodes */}
-                <circle cx="160" cy="135" r="7" fill="#059669" stroke="#ffffff" strokeWidth="2.5" />
-                <circle cx="500" cy="135" r="7" fill="#2563eb" stroke="#ffffff" strokeWidth="2.5" />
-                <circle cx="840" cy="135" r="7" fill="#d97706" stroke="#ffffff" strokeWidth="2.5" />
+                <circle cx="160" cy="105" r="6" fill="#041d37" stroke="#ffffff" strokeWidth="2.5" />
+                <circle cx="500" cy="105" r="6" fill="#1d8ccc" stroke="#ffffff" strokeWidth="2.5" />
+                <circle cx="840" cy="105" r="6" fill="#0f3357" stroke="#ffffff" strokeWidth="2.5" />
               </svg>
             </div>
 
             {/* Mobile Vertical Artistic Stem */}
-            <div className="lg:hidden flex justify-center py-6">
-              <div className="w-1 h-12 rounded-full bg-gradient-to-b from-[#1d8ccc] via-emerald-400 to-amber-400 shadow-md" />
+            <div className="lg:hidden flex justify-center py-4">
+              <div className="w-1 h-8 rounded-full bg-gradient-to-b from-[#1d8ccc] via-[#0284c7] to-[#041d37] shadow-md" />
             </div>
 
-            {/* 3. ARTISTIC SCULPTED BRANCH ISLANDS (Art-inspired Floating Forms) */}
+            {/* 3. ARTISTIC SCULPTED BRANCH ISLANDS (Brand-Aligned Theme) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-8 pt-2 relative z-20">
               
               {/* ===== BRANCH 1: أكبر نادي أعمال في الغرب الجزائري ===== */}
@@ -420,49 +389,51 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="group relative"
               >
-                {/* Organic Ambient Glow Behind Card */}
-                <div className="absolute -inset-1 rounded-[38px] bg-gradient-to-b from-emerald-400/20 via-teal-300/10 to-transparent blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                {/* Ambient Soft Brand Glow Behind Card */}
+                <div className="absolute -inset-1 rounded-[38px] bg-gradient-to-b from-blue-500/15 via-[#041d37]/10 to-transparent blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                 {/* Sculpted Asymmetric Organic Card Container */}
-                <div className="relative bg-gradient-to-b from-white via-white to-emerald-50/30 rounded-[36px] p-7 sm:p-8 shadow-[0_15px_40px_rgba(16,185,129,0.08)] border-2 border-emerald-100/80 group-hover:border-emerald-300 group-hover:shadow-[0_20px_50px_rgba(16,185,129,0.18)] transition-all duration-500 flex flex-col justify-between h-full transform group-hover:-translate-y-2">
+                <div className="relative bg-gradient-to-b from-white via-white to-slate-50/60 rounded-[36px] p-7 sm:p-8 shadow-[0_12px_35px_rgba(4,29,55,0.06)] border-2 border-slate-200/80 group-hover:border-[#1d8ccc]/60 group-hover:shadow-[0_20px_45px_rgba(4,29,55,0.12)] transition-all duration-500 flex flex-col justify-between h-full transform group-hover:-translate-y-2">
                   
-                  <div className="space-y-4 text-right">
+                  <div className={`space-y-4 ${language === "ar" ? "text-right" : "text-left"}`}>
                     {/* Title & Subtitle */}
                     <div className="space-y-1.5">
-                      <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug group-hover:text-emerald-700 transition-colors">
-                        أكبر نادي أعمال في الغرب الجزائري
+                      <h3 className="text-xl sm:text-2xl font-black text-[#041d37] leading-snug group-hover:text-[#1d8ccc] transition-colors">
+                        {t("clubTitle")}
                       </h3>
-                      <p className="text-xs font-bold text-emerald-600/90 tracking-wide">
-                        The Biggest Business Club in West Algeria
+                      <p className="text-xs font-bold text-[#1d8ccc] tracking-wide">
+                        MARIN Business Club Network
                       </p>
                     </div>
 
                     {/* Description Paragraph */}
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                      ملتقى نخبوي يجمع قادة الشركات والمستثمرين ورواد الأعمال في الغرب الجزائري لتبادل الفرص الاستثمارية والخبرات القيادية وصناعة التحالفات.
+                      {t("clubDesc")}
                     </p>
 
-                    {/* Key Highlights with Organic Bullets */}
-                    <div className="space-y-2.5 pt-3 border-t border-emerald-100/60">
+                    {/* Key Highlights with Brand Bullets */}
+                    <div className="space-y-2.5 pt-3 border-t border-slate-100">
                       <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-xs" />
-                        <span>لقاءات دورية وندوات أعمال استراتيجية</span>
+                        <span className="w-2 h-2 rounded-full bg-[#1d8ccc] shrink-0 shadow-xs" />
+                        <span>{t("clubItem1")}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-xs" />
-                        <span>حاضنة شراكات وتكتلات تجارية رائدة</span>
+                        <span className="w-2 h-2 rounded-full bg-[#1d8ccc] shrink-0 shadow-xs" />
+                        <span>{t("clubItem2")}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-xs" />
-                        <span>بيئة احترافية لدعم توسع وتطوير الشركات</span>
+                        <span className="w-2 h-2 rounded-full bg-[#1d8ccc] shrink-0 shadow-xs" />
+                        <span>{t("clubItem3")}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Card Bottom Artistic Footer */}
-                  <div className="mt-8 pt-4 border-t border-emerald-100/70 flex items-center justify-between text-xs text-emerald-700 font-black">
-                    <span className="bg-emerald-50 px-3 py-1 rounded-full">MARIN Business Club</span>
-                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 transition-transform">
+                  <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-[#041d37] font-black">
+                    <span className="bg-slate-100 text-[#041d37] px-3.5 py-1 rounded-full border border-slate-200/60">
+                      MARIN Business Club
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-[#041d37] text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 group-hover:bg-[#1d8ccc] transition-all">
                       <ArrowLeft className="w-4 h-4" />
                     </div>
                   </div>
@@ -478,55 +449,51 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="group relative"
               >
-                {/* Organic Ambient Glow Behind Card */}
+                {/* Ambient Soft Brand Glow Behind Card */}
                 <div className="absolute -inset-1 rounded-[38px] bg-gradient-to-b from-blue-400/25 via-sky-300/15 to-transparent blur-xl opacity-80 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                 {/* Sculpted Asymmetric Organic Card Container */}
-                <div className="relative bg-gradient-to-b from-white via-white to-blue-50/40 rounded-[36px] p-7 sm:p-8 shadow-[0_15px_40px_rgba(29,140,204,0.12)] border-2 border-blue-200 group-hover:border-[#1d8ccc] group-hover:shadow-[0_20px_50px_rgba(29,140,204,0.22)] transition-all duration-500 flex flex-col justify-between h-full transform group-hover:-translate-y-2">
+                <div className="relative bg-gradient-to-b from-white via-white to-blue-50/40 rounded-[36px] p-7 sm:p-8 shadow-[0_12px_35px_rgba(29,140,204,0.08)] border-2 border-blue-200/90 group-hover:border-[#1d8ccc] group-hover:shadow-[0_20px_45px_rgba(29,140,204,0.18)] transition-all duration-500 flex flex-col justify-between h-full transform group-hover:-translate-y-2">
                   
-                  {/* Crown Ribbon at Top */}
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 via-[#1d8ccc] to-sky-500 text-white px-4 py-1 rounded-full text-xs font-black shadow-lg shadow-blue-500/30 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-300" />
-                    المنصة التعليمية الرسمية
-                  </div>
-
-                  <div className="space-y-4 text-right pt-2">
+                  <div className={`space-y-4 ${language === "ar" ? "text-right" : "text-left"}`}>
                     {/* Title & Subtitle */}
                     <div className="space-y-1.5">
-                      <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug group-hover:text-[#1d8ccc] transition-colors">
-                        الأكاديمية الرقمية والتدريب التطبيقي
+                      <h3 className="text-xl sm:text-2xl font-black text-[#041d37] leading-snug group-hover:text-[#1d8ccc] transition-colors">
+                        {t("academyBranchTitle")}
                       </h3>
-                      <p className="text-xs font-bold text-blue-600/90 tracking-wide">
+                      <p className="text-xs font-bold text-[#1d8ccc] tracking-wide">
                         E-Academy & Practical Training
                       </p>
                     </div>
 
                     {/* Description Paragraph */}
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                      منصة تدريبية متخصصة تقدم دورات مكثفة قائمة على دراسات حالة حقيقية ونماذج تشغيلية جاهزة للتنفيذ الفوري في الإدارة، التسويق، والمالية.
+                      {t("academyBranchDesc")}
                     </p>
 
-                    {/* Key Highlights with Organic Bullets */}
+                    {/* Key Highlights with Brand Bullets */}
                     <div className="space-y-2.5 pt-3 border-t border-blue-100/70">
                       <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
                         <span className="w-2 h-2 rounded-full bg-[#1d8ccc] shrink-0 shadow-xs" />
-                        <span>دروس تفاعلية ومسجلة بجودة عالية</span>
+                        <span>{t("academyItem1")}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
                         <span className="w-2 h-2 rounded-full bg-[#1d8ccc] shrink-0 shadow-xs" />
-                        <span>نماذج وملفات عمل قابلة للتحميل والتطبيق</span>
+                        <span>{t("academyItem2")}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
                         <span className="w-2 h-2 rounded-full bg-[#1d8ccc] shrink-0 shadow-xs" />
-                        <span>شهادات إتمام ومتابعة عملية من الخبراء</span>
+                        <span>{t("academyItem3")}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Card Bottom Artistic Footer */}
                   <div className="mt-8 pt-4 border-t border-blue-100/80 flex items-center justify-between text-xs text-[#1d8ccc] font-black">
-                    <span className="bg-blue-50 px-3 py-1 rounded-full">MARIN E-Academy</span>
-                    <div className="w-8 h-8 rounded-full bg-[#1d8ccc] text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 transition-transform">
+                    <span className="bg-blue-50 text-[#1d8ccc] px-3.5 py-1 rounded-full border border-blue-200/50">
+                      MARIN E-Academy
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-[#1d8ccc] text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 group-hover:bg-[#0062c4] transition-all">
                       <ArrowLeft className="w-4 h-4" />
                     </div>
                   </div>
@@ -542,49 +509,51 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="group relative"
               >
-                {/* Organic Ambient Glow Behind Card */}
-                <div className="absolute -inset-1 rounded-[38px] bg-gradient-to-b from-amber-400/20 via-orange-300/10 to-transparent blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                {/* Ambient Soft Brand Glow Behind Card */}
+                <div className="absolute -inset-1 rounded-[38px] bg-gradient-to-b from-sky-400/15 via-[#0f3357]/10 to-transparent blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                 {/* Sculpted Asymmetric Organic Card Container */}
-                <div className="relative bg-gradient-to-b from-white via-white to-amber-50/30 rounded-[36px] p-7 sm:p-8 shadow-[0_15px_40px_rgba(245,158,11,0.08)] border-2 border-amber-100/80 group-hover:border-amber-300 group-hover:shadow-[0_20px_50px_rgba(245,158,11,0.18)] transition-all duration-500 flex flex-col justify-between h-full transform group-hover:-translate-y-2">
+                <div className="relative bg-gradient-to-b from-white via-white to-slate-50/60 rounded-[36px] p-7 sm:p-8 shadow-[0_12px_35px_rgba(4,29,55,0.06)] border-2 border-slate-200/80 group-hover:border-[#1d8ccc]/60 group-hover:shadow-[0_20px_45px_rgba(4,29,55,0.12)] transition-all duration-500 flex flex-col justify-between h-full transform group-hover:-translate-y-2">
                   
-                  <div className="space-y-4 text-right">
+                  <div className={`space-y-4 ${language === "ar" ? "text-right" : "text-left"}`}>
                     {/* Title & Subtitle */}
                     <div className="space-y-1.5">
-                      <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug group-hover:text-amber-700 transition-colors">
-                        شبكة العلاقات وفرص الأعمال
+                      <h3 className="text-xl sm:text-2xl font-black text-[#041d37] leading-snug group-hover:text-[#1d8ccc] transition-colors">
+                        {t("networkBranchTitle")}
                       </h3>
-                      <p className="text-xs font-bold text-amber-600/90 tracking-wide">
+                      <p className="text-xs font-bold text-[#1d8ccc] tracking-wide">
                         Networking & Business Relationships
                       </p>
                     </div>
 
                     {/* Description Paragraph */}
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                      جسر استراتيجي لتشبيك العلاقات بين أصحاب المشاريع، المستثمرين، والمؤسسات لتسريع الصفقات وفتح آفاق تجارية وشراكات نوعية.
+                      {t("networkBranchDesc")}
                     </p>
 
-                    {/* Key Highlights with Organic Bullets */}
-                    <div className="space-y-2.5 pt-3 border-t border-amber-100/60">
+                    {/* Key Highlights with Brand Bullets */}
+                    <div className="space-y-2.5 pt-3 border-t border-slate-100">
                       <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 shadow-xs" />
-                        <span>جلسات تشبيك مغلقة (B2B Networking)</span>
+                        <span className="w-2 h-2 rounded-full bg-[#1d8ccc] shrink-0 shadow-xs" />
+                        <span>{t("networkItem1")}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 shadow-xs" />
-                        <span>ربط مباشر بين المشاريع الواعدة والمستثمرين</span>
+                        <span className="w-2 h-2 rounded-full bg-[#1d8ccc] shrink-0 shadow-xs" />
+                        <span>{t("networkItem2")}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 shadow-xs" />
-                        <span>فرص حصرية للتعاقد والتمويل والتوسع الإقليمي</span>
+                        <span className="w-2 h-2 rounded-full bg-[#1d8ccc] shrink-0 shadow-xs" />
+                        <span>{t("networkItem3")}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Card Bottom Artistic Footer */}
-                  <div className="mt-8 pt-4 border-t border-amber-100/70 flex items-center justify-between text-xs text-amber-700 font-black">
-                    <span className="bg-amber-50 px-3 py-1 rounded-full">MARIN Networking Hub</span>
-                    <div className="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 transition-transform">
+                  <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-[#041d37] font-black">
+                    <span className="bg-slate-100 text-[#041d37] px-3.5 py-1 rounded-full border border-slate-200/60">
+                      MARIN Networking Hub
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-[#041d37] text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 group-hover:bg-[#1d8ccc] transition-all">
                       <ArrowLeft className="w-4 h-4" />
                     </div>
                   </div>
@@ -596,90 +565,136 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
 
           </div>
 
-          {/* Interactive Platform Video / Feature Presentation Showcase */}
-          <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#091f3a] to-[#041d37] text-white p-6 sm:p-10 lg:p-12 shadow-2xl border border-slate-100">
-            {/* Background Light Glows */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Geometric Dot Matrix Corner */}
-            <div className="absolute top-6 left-6 opacity-30 grid grid-cols-6 gap-1 pointer-events-none hidden sm:grid">
-              {[...Array(24)].map((_, i) => (
-                <span key={i} className="w-1.5 h-1.5 rounded-full bg-blue-300" />
-              ))}
-            </div>
-
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-7 space-y-5 text-right">
-                <h3 className="text-xl sm:text-3xl font-black leading-snug">
-                  منصة شاملة تجمع بين النظريات المتقدمة والتطبيق الميداني للشركات
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl">
-                  لا نكتفي بالشرح الأكاديمي المجرد؛ بل نقدم نماذج مالية حقيقية، واستراتيجيات تسويق موجهة، وهيكلة تنظيمية قابلة للتحميل والتطبيق الفوري في مشروعك أو شركتك.
-                </p>
-
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-2">
-                  <div className="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-1">
-                    <p className="text-lg font-black text-blue-400">100%</p>
-                    <p className="text-xs text-slate-300">نماذج وملفات عمل قابلة للتنزيل</p>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-1">
-                    <p className="text-lg font-black text-rose-400">مباشر ومسجل</p>
-                    <p className="text-xs text-slate-300">وصول دائم لجميع التحديثات</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Video Player Card Preview */}
-              <div className="lg:col-span-5 flex justify-center">
-                <div
-                  onClick={() => {
-                    const first = courses[0];
-                    if (first) onSelectCourse(first);
-                  }}
-                  className="group relative w-full aspect-video sm:aspect-4/3 rounded-2xl overflow-hidden bg-slate-800 border-2 border-white/20 shadow-2xl cursor-pointer flex items-center justify-center"
-                >
-                  <img
-                    src="/instructor.jpg"
-                    alt="MARIN Platform Video"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-70"
-                  />
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
-                  
-                  {/* Play Button */}
-                  <div className="w-14 sm:w-16 h-14 sm:h-16 rounded-full bg-[#e11d48] text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform z-10">
-                    <Play className="w-6 h-6 fill-white ml-0.5" />
-                  </div>
-                  <span className="absolute bottom-3 text-xs font-bold text-white bg-black/60 px-3 py-1 rounded-full backdrop-blur-xs">
-                    شاهد العرض التعريفي
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
+      </section>
+
+      {/* 3. "من نحن" (ABOUT US) SECTION WITH CURVED BLUE BACKGROUND */}
+      <section className="relative w-full overflow-hidden my-4 sm:my-8" id="about-section">
+        
+        {/* Top Curved Edge (Dipping concave arc inspired by reference image) */}
+        <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
+          <svg
+            className="w-full h-10 sm:h-16 lg:h-20 block text-[#eef6fc]"
+            viewBox="0 0 1440 90"
+            fill="currentColor"
+            preserveAspectRatio="none"
+          >
+            <path d="M0,0 Q720,90 1440,0 L1440,90 L0,90 Z" />
+          </svg>
+        </div>
+
+        {/* Central Content Canvas with Soft Blue Background */}
+        <div className="bg-[#eef6fc] w-full py-8 sm:py-16 px-4 sm:px-6">
+          <div className="max-w-6xl mx-auto space-y-10 sm:space-y-14">
+
+            {/* Section Heading */}
+            <div className="flex flex-col items-center justify-center text-center space-y-2">
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#041d37] tracking-tight">
+                {t("aboutTitle")}
+              </h2>
+              <p className="text-xs sm:text-sm md:text-base text-slate-600 max-w-2xl mx-auto font-medium leading-relaxed pt-1">
+                {t("aboutSubtitle")}
+              </p>
+            </div>
+
+            {/* Core Pillars: Vision, Mission, Values */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+              
+              {/* Pillar 1: Vision */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className={`bg-white rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 border border-blue-100 ${language === "ar" ? "text-right" : "text-left"} relative overflow-hidden group`}
+              >
+                <div className={`absolute top-0 ${language === "ar" ? "right-0" : "left-0"} w-24 h-24 bg-blue-50 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform`} />
+                <div className="space-y-3 relative z-10">
+                  <h3 className="text-lg sm:text-xl font-black text-[#041d37]">
+                    {t("visionTitle")}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                    {t("visionDesc")}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Pillar 2: Mission */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className={`bg-white rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 border border-blue-100 ${language === "ar" ? "text-right" : "text-left"} relative overflow-hidden group`}
+              >
+                <div className={`absolute top-0 ${language === "ar" ? "right-0" : "left-0"} w-24 h-24 bg-sky-50 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform`} />
+                <div className="space-y-3 relative z-10">
+                  <h3 className="text-lg sm:text-xl font-black text-[#041d37]">
+                    {t("missionTitle")}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                    {t("missionDesc")}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Pillar 3: Values */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className={`bg-white rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 border border-blue-100 ${language === "ar" ? "text-right" : "text-left"} relative overflow-hidden group`}
+              >
+                <div className={`absolute top-0 ${language === "ar" ? "right-0" : "left-0"} w-24 h-24 bg-indigo-50 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform`} />
+                <div className="space-y-3 relative z-10">
+                  <h3 className="text-lg sm:text-xl font-black text-[#041d37]">
+                    {t("valuesTitle")}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                    {t("valuesDesc")}
+                  </p>
+                </div>
+              </motion.div>
+
+            </div>
+
+          </div>
+        </div>
+
+        {/* Bottom Curved Edge (Bowing convex arc extending into the white section below) */}
+        <div className="w-full overflow-hidden leading-none pointer-events-none -mt-[1px]">
+          <svg
+            className="w-full h-10 sm:h-16 lg:h-20 block text-[#eef6fc]"
+            viewBox="0 0 1440 90"
+            fill="currentColor"
+            preserveAspectRatio="none"
+          >
+            <path d="M0,0 L1440,0 L1440,0 Q720,90 0,0 Z" />
+          </svg>
+        </div>
+
       </section>
 
       {/* 4. CALL TO ACTION BANNER */}
       <section className="py-10 sm:py-16 px-4 sm:px-6 max-w-6xl mx-auto w-full">
-        <div className="bg-gradient-to-r from-[#091f3a] via-[#041d37] to-[#091f3a] rounded-3xl p-6 sm:p-12 text-white text-center space-y-5 shadow-2xl relative overflow-hidden border border-white/10">
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-rose-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="bg-gradient-to-r from-[#041d37] via-[#092b4c] to-[#041d37] rounded-3xl p-6 sm:p-12 text-white text-center space-y-5 shadow-2xl relative overflow-hidden border border-blue-400/20">
+          <div className="absolute -top-24 -right-24 w-80 h-80 bg-[#1d8ccc]/25 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-[#38bdf8]/15 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 max-w-2xl mx-auto space-y-4">
-            <h2 className="text-2xl sm:text-4xl font-black">
-              ابدأ رحلتك التدريبية وطوّر أعمالك اليوم
+            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
+              {t("ctaTitle")}
             </h2>
-            <p className="text-xs sm:text-sm md:text-base text-slate-300 font-normal">
-              انضم إلى آلاف المتعلمين واستفد من أحدث الدورات الاستراتيجية في أكاديمية مارين.
+            <p className="text-xs sm:text-sm md:text-base text-blue-100/90 font-normal leading-relaxed">
+              {t("ctaDesc")}
             </p>
             <div className="pt-2">
               <button
                 onClick={onExploreAcademy}
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#e11d48] hover:bg-[#be123c] text-white font-bold text-sm shadow-xl hover:shadow-rose-500/30 transition-all cursor-pointer transform active:scale-98"
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#1d8ccc] to-[#0284c7] hover:from-[#177bb5] hover:to-[#0270a8] text-white font-bold text-sm shadow-xl shadow-blue-950/40 hover:shadow-blue-500/30 transition-all cursor-pointer transform active:scale-98"
               >
-                <span>دخول الأكاديمية والبدء الآن</span>
+                <span>{t("ctaButton")}</span>
                 <ArrowLeft className="w-4 h-4" />
               </button>
             </div>
