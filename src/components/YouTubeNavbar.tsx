@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ArrowRight } from "lucide-react";
+import { DoorOpen } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { UserProfile } from "../types";
 
@@ -57,10 +57,10 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
           <div className="flex items-center gap-1.5 sm:gap-3 z-10 shrink-0">
             <button
               onClick={() => setActiveTab("register")}
-              className="rounded-full bg-[#0062c4] hover:bg-[#0070e0] text-white font-bold text-[11px] sm:text-xs md:text-sm px-2.5 sm:px-5 md:px-6 py-1.5 sm:py-2 md:py-2.5 flex items-center gap-1 sm:gap-2 shadow-md shadow-blue-900/30 hover:shadow-blue-500/20 active:scale-98 transition-all cursor-pointer"
+              className="rounded-full bg-[#0062c4] hover:bg-[#0070e0] text-white font-bold text-[11px] sm:text-xs md:text-sm px-2.5 sm:px-5 md:px-6 py-1.5 sm:py-2 md:py-2.5 flex items-center gap-1.5 sm:gap-2 shadow-md shadow-blue-900/30 hover:shadow-blue-500/20 active:scale-98 transition-all cursor-pointer"
             >
               <span>ابدأ الآن</span>
-              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+              <DoorOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
             </button>
           </div>
 
@@ -136,10 +136,10 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
             <div className="flex items-center gap-1.5 sm:gap-3 z-10 shrink-0">
               <button
                 onClick={() => setActiveTab("register")}
-                className="rounded-full bg-[#0062c4] hover:bg-[#0070e0] text-white font-bold text-[11px] sm:text-xs md:text-sm px-2.5 sm:px-5 py-1.5 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-md shadow-blue-900/40 hover:shadow-blue-500/25 active:scale-98 transition-all cursor-pointer"
+                className="rounded-full bg-[#0062c4] hover:bg-[#0070e0] text-white font-bold text-[11px] sm:text-xs md:text-sm px-2.5 sm:px-5 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2 shadow-md shadow-blue-900/40 hover:shadow-blue-500/25 active:scale-98 transition-all cursor-pointer"
               >
                 <span>ابدأ الآن</span>
-                <ArrowRight className="w-3.5 h-3.5 text-white" />
+                <DoorOpen className="w-3.5 h-3.5 text-white" />
               </button>
             </div>
 
