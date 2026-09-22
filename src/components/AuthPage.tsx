@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { User, Mail, Lock, AtSign, ShieldCheck, ArrowRight, CheckCircle2, AlertCircle, Compass, Anchor } from "lucide-react";
 import { UserProfile } from "../types";
+import { useLanguage } from "../context/LanguageContext";
 
 interface AuthPageProps {
   initialMode?: "login" | "register";
@@ -17,6 +18,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   onBackToHome,
 }) => {
   const [mode, setMode] = useState<"login" | "register">(initialMode);
+  const { t, isRTL } = useLanguage();
   
   // Registration fields
   const [nom, setNom] = useState<string>("");
@@ -45,17 +47,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
     if (mode === "register") {
       if (!nom.trim() || !prenom.trim() || !username.trim() || !email.trim() || !password) {
-        setErrorMessage("يرجى ملء جميع الحقول الإلزامية (*).");
+        setErrorMessage(t("fillRequiredFields"));
         return;
       }
 
       if (password !== confirmPassword) {
-        setErrorMessage("كلمتا المرور غير متطابقتين.");
+        setErrorMessage(t("passwordMismatch"));
         return;
       }
 
       if (password.length < 6) {
-        setErrorMessage("يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.");
+        setErrorMessage(t("passwordMinLength"));
         return;
       }
 
@@ -66,7 +68,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         email: email.trim(),
       }));
 
-      setSuccessMessage(`تم إنشاء الحساب بنجاح! مرحباً بك ${prenom.trim()}`);
+      setSuccessMessage(`${t("accountCreated")} ${prenom.trim()}`);
       setTimeout(() => {
         onSuccess();
       }, 1400);
@@ -74,7 +76,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     } else {
       // Login mode
       if (!loginIdentifier.trim() || !loginPassword) {
-        setErrorMessage("يرجى إدخال اسم المستخدم/البريد الإلكتروني وكلمة المرور.");
+        setErrorMessage(t("fillCredentials"));
         return;
       }
 
@@ -85,7 +87,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         }));
       }
 
-      setSuccessMessage("تم تسجيل الدخول بنجاح! مرحباً بعودتك.");
+      setSuccessMessage(t("loginSuccess"));
       setTimeout(() => {
         onSuccess();
       }, 1200);
@@ -93,12 +95,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   };
 
   return (
-    <div dir="rtl" className="min-h-full w-full bg-white text-slate-900 flex flex-col justify-between overflow-y-auto pt-[86px] text-right font-sans">
+    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-full w-full bg-white text-slate-900 flex flex-col justify-between overflow-y-auto pt-[86px] ${isRTL ? "text-right" : "text-left"} font-sans`}>
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12">
         <div className="w-full max-w-5xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
           
           {/* Right/Side Hero Brand Showcase Column */}
-          <div className="relative lg:col-span-5 bg-[#071d37] text-white p-8 sm:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-l border-slate-700/50 overflow-hidden">
+          <div className={`relative lg:col-span-5 bg-[#071d37] text-white p-8 sm:p-10 flex flex-col justify-between border-b lg:border-b-0 ${isRTL ? "lg:border-l" : "lg:border-r"} border-slate-700/50 overflow-hidden`}>
             {/* Ambient Overlay */}
             <div className="absolute inset-0 z-0 opacity-20">
               <img
@@ -116,8 +118,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 onClick={onBackToHome}
                 className="inline-flex items-center gap-2 text-xs font-bold text-white/90 hover:text-white bg-white/10 hover:bg-white/20 border border-white/15 px-3.5 py-2 rounded-xl transition-all cursor-pointer group backdrop-blur-xs"
               >
-                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                <span>العودة للرئيسية</span>
+                <ArrowRight className={`w-3.5 h-3.5 transition-transform ${isRTL ? "group-hover:translate-x-1" : "rotate-180 group-hover:-translate-x-1"}`} />
+                <span>{t("backToHome")}</span>
               </button>
 
               <div className="mt-8">
@@ -125,10 +127,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   MARIN Academy
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-snug">
-                  التميز في التدريب والتطوير المهني
+                  {t("authHeroTitle")}
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-300 mt-3 leading-relaxed font-medium">
-                  انضم إلى نخبة رواد الأعمال، المدراء والمهنيين لتطوير مهاراتك من خلال برامج ودورات تدريبية احترافية عالية التأثير.
+                  {t("authHeroDesc")}
                 </p>
               </div>
             </div>
@@ -139,13 +141,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-sky-400 shrink-0">
                   <Compass className="w-4 h-4" />
                 </div>
-                <span>برامج تدريبية معتمدة ومناهج تعليمية متميزة</span>
+                <span>{t("authHighlight1")}</span>
               </div>
               <div className="flex items-center gap-3 text-xs text-slate-200 font-medium">
                 <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-emerald-400 shrink-0">
                   <Anchor className="w-4 h-4" />
                 </div>
-                <span>متابعة دقيقة لمستوى التقدم وشهادات إتمام مهنية</span>
+                <span>{t("authHighlight2")}</span>
               </div>
             </div>
           </div>
@@ -168,7 +170,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                تسجيل الدخول
+                {t("signIn")}
               </button>
               <button
                 type="button"
@@ -183,7 +185,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                إنشاء حساب
+                {t("signUp")}
               </button>
             </div>
 
@@ -194,19 +196,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-black text-slate-900">{successMessage}</h3>
-                <p className="text-xs text-slate-500">جاري التحميل...</p>
+                <p className="text-xs text-slate-500">...</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 
                 <div>
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                    {mode === "login" ? "تسجيل الدخول إلى حسابك" : "إنشاء حساب جديد"}
+                    {mode === "login" ? t("loginTitle") : t("registerTitle")}
                   </h2>
                   <p className="text-xs text-slate-500 mt-1 font-medium">
-                    {mode === "login" 
-                      ? "أدخل بيانات حسابك للمتابعة في دوراتك التدريبية." 
-                      : "أكمل النموذج التالي لإنشاء حسابك في أكاديمية MARIN."}
+                    {mode === "login" ? t("loginSubtitle") : t("registerSubtitle")}
                   </p>
                 </div>
 
@@ -224,31 +224,31 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     {/* Nom et Prénom */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">اللقب (الاسم العائلي) *</label>
+                        <label className="text-xs font-bold text-slate-700">{t("lastName")} *</label>
                         <div className="relative">
-                          <User className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                          <User className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2`} />
                           <input
                             type="text"
                             required
                             value={nom}
                             onChange={(e) => setNom(e.target.value)}
-                            placeholder="اللقب"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors"
+                            placeholder={t("lastName")}
+                            className={`w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 ${isRTL ? "pr-10 pl-3.5 text-right" : "pl-10 pr-3.5 text-left"} text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors`}
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">الاسم الأول *</label>
+                        <label className="text-xs font-bold text-slate-700">{t("firstName")} *</label>
                         <div className="relative">
-                          <User className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                          <User className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2`} />
                           <input
                             type="text"
                             required
                             value={prenom}
                             onChange={(e) => setPrenom(e.target.value)}
-                            placeholder="الاسم"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors"
+                            placeholder={t("firstName")}
+                            className={`w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 ${isRTL ? "pr-10 pl-3.5 text-right" : "pl-10 pr-3.5 text-left"} text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors`}
                           />
                         </div>
                       </div>
@@ -256,9 +256,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                     {/* Nom d'utilisateur */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700">اسم المستخدم *</label>
+                      <label className="text-xs font-bold text-slate-700">{t("username")} *</label>
                       <div className="relative">
-                        <AtSign className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        <AtSign className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2`} />
                         <input
                           type="text"
                           required
@@ -266,16 +266,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           onChange={(e) => setUsername(e.target.value)}
                           placeholder="user_name"
                           dir="ltr"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-right"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-left"
                         />
                       </div>
                     </div>
 
                     {/* Email */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700">البريد الإلكتروني *</label>
+                      <label className="text-xs font-bold text-slate-700">{t("emailAddress")} *</label>
                       <div className="relative">
-                        <Mail className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        <Mail className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2`} />
                         <input
                           type="email"
                           required
@@ -283,7 +283,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="example@email.com"
                           dir="ltr"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-right"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-left"
                         />
                       </div>
                     </div>
@@ -291,9 +291,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     {/* Mot de passe et Confirmation */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">كلمة المرور *</label>
+                        <label className="text-xs font-bold text-slate-700">{t("password")} *</label>
                         <div className="relative">
-                          <Lock className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                          <Lock className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2`} />
                           <input
                             type="password"
                             required
@@ -301,15 +301,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
                             dir="ltr"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-right"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-left"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">تأكيد كلمة المرور *</label>
+                        <label className="text-xs font-bold text-slate-700">{t("confirmPassword")} *</label>
                         <div className="relative">
-                          <ShieldCheck className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                          <ShieldCheck className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2`} />
                           <input
                             type="password"
                             required
@@ -317,7 +317,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="••••••••"
                             dir="ltr"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-right"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-left"
                           />
                         </div>
                       </div>
@@ -329,34 +329,34 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 {mode === "login" && (
                   <>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700">البريد الإلكتروني أو اسم المستخدم *</label>
+                      <label className="text-xs font-bold text-slate-700">{t("loginIdentifier")} *</label>
                       <div className="relative">
-                        <User className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        <User className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2`} />
                         <input
                           type="text"
                           required
                           value={loginIdentifier}
                           onChange={(e) => setLoginIdentifier(e.target.value)}
-                          placeholder="example@email.com أو اسم المستخدم"
+                          placeholder="example@email.com"
                           dir="ltr"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pr-10 pl-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-right"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-left"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-700">كلمة المرور *</label>
+                        <label className="text-xs font-bold text-slate-700">{t("password")} *</label>
                         <button
                           type="button"
-                          onClick={() => alert("سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.")}
+                          onClick={() => alert(t("resetPasswordAlert"))}
                           className="text-xs text-blue-600 hover:text-blue-700 font-bold cursor-pointer"
                         >
-                          نسيت كلمة المرور؟
+                          {t("forgotPassword")}
                         </button>
                       </div>
                       <div className="relative">
-                        <Lock className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        <Lock className={`w-4 h-4 text-slate-400 absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2`} />
                         <input
                           type="password"
                           required
@@ -364,7 +364,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           onChange={(e) => setLoginPassword(e.target.value)}
                           placeholder="••••••••"
                           dir="ltr"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pr-10 pl-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-right"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#071d37] focus:ring-1 focus:ring-[#071d37] transition-colors text-left"
                         />
                       </div>
                     </div>
@@ -376,22 +376,22 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   type="submit"
                   className="w-full mt-4 bg-[#071d37] hover:bg-[#0c2f57] text-white font-bold py-3.5 rounded-xl text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-950/20 hover:scale-[1.01] active:scale-[0.99]"
                 >
-                  <span>{mode === "login" ? "تسجيل الدخول" : "إنشاء حسابي"}</span>
+                  <span>{mode === "login" ? t("signIn") : t("createAccount")}</span>
                 </button>
 
                 {/* Footer Switcher */}
                 <div className="pt-2 text-center">
                   <p className="text-xs text-slate-600">
-                    {mode === "login" ? "ليس لديك حساب بعد؟" : "هل لديك حساب بالفعل؟"}{" "}
+                    {mode === "login" ? t("dontHaveAccount") : t("alreadyHaveAccount")}{" "}
                     <button
                       type="button"
                       onClick={() => {
                         setMode(mode === "login" ? "register" : "login");
                         setErrorMessage(null);
                       }}
-                      className="text-blue-600 hover:text-blue-700 font-bold underline mr-1 cursor-pointer"
+                      className="text-blue-600 hover:text-blue-700 font-bold underline mx-1 cursor-pointer"
                     >
-                      {mode === "login" ? "إنشاء حساب مجاناً" : "تسجيل الدخول"}
+                      {mode === "login" ? t("signUpForFree") : t("signIn")}
                     </button>
                   </p>
                 </div>
@@ -405,3 +405,4 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     </div>
   );
 };
+

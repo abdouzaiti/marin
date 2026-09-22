@@ -3,6 +3,7 @@ import { Search, X } from "lucide-react";
 import { VideoCourse } from "../data/videoCourses";
 import { UserProfile } from "../types";
 import { LandingFooter } from "./LandingFooter";
+import { useLanguage } from "../context/LanguageContext";
 
 interface YouTubeHomeFeedProps {
   courses: VideoCourse[];
@@ -20,13 +21,13 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
   courses,
   selectCourse,
 }) => {
-  // The 3 featured courses matching the curriculum
+  const { language, isRTL } = useLanguage();
+
+  // The featured courses matching the curriculum
   const primaryCourses = useMemo(() => [
     {
       courseIndex: 0,
-      title: "المالية الذكية",
-      subtitleLine1: "كيف تضمن أموالك",
-      subtitleLine2: "وتتحكم في مستقبلك",
+      title: language === "ar" ? "المالية الذكية" : language === "fr" ? "Finance Intelligente" : "Smart Finance",
       accentColor: "#22c55e",
       accentGlow: "rgba(34, 197, 94, 0.45)",
       rimBorder: "border-emerald-400",
@@ -36,9 +37,7 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
     },
     {
       courseIndex: 1,
-      title: "التسويق الاستراتيجي",
-      subtitleLine1: "أطلق قيمة",
-      subtitleLine2: "تجعلك بلا منافسة",
+      title: language === "ar" ? "التسويق الاستراتيجي" : language === "fr" ? "Marketing Stratégique" : "Strategic Marketing",
       accentColor: "#ef4444",
       accentGlow: "rgba(239, 68, 68, 0.45)",
       rimBorder: "border-red-500",
@@ -46,19 +45,7 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
       starColor: "#ef4444",
       tag: "strategic-marketing",
     },
-    {
-      courseIndex: 2,
-      title: "نظام الشركة",
-      subtitleLine1: "من التسيير العشوائي",
-      subtitleLine2: "إلى التحكم الكامل",
-      accentColor: "#fbbf24",
-      accentGlow: "rgba(251, 191, 36, 0.45)",
-      rimBorder: "border-amber-400",
-      dotBg: "radial-gradient(#fbbf24 2px, transparent 2px)",
-      starColor: "#fbbf24",
-      tag: "company-system",
-    },
-  ], []);
+  ], [language]);
 
   return (
     <div className="flex-1 bg-white text-slate-900 w-full">
@@ -67,7 +54,7 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
       <div className="pt-8 sm:pt-12 pb-12 sm:pb-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center">
 
         {/* Featured Course Cards Grid */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 max-w-7xl gap-4 sm:gap-6 lg:gap-8 mx-auto">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 max-w-5xl gap-4 sm:gap-6 lg:gap-8 mx-auto">
           {primaryCourses.map((item, idx) => {
             const courseData = courses[item.courseIndex] || courses[0];
 
@@ -126,11 +113,11 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
                     </div>
                   </div>
 
-                  {/* Right: Content in Arabic RTL matching image */}
-                  <div className="relative z-10 w-[56%] sm:w-[52%] flex flex-col justify-between items-end text-right pl-1 sm:pl-2">
+                  {/* Content column */}
+                  <div className={`relative z-10 w-[56%] sm:w-[52%] flex flex-col justify-center ${isRTL ? "items-end text-right pl-1 sm:pl-2" : "items-start text-left pr-1 sm:pr-2"}`}>
                     
-                    {/* Top Content: Star + Title + Subtitle */}
-                    <div className="w-full flex flex-col items-end pt-0.5 sm:pt-1">
+                    {/* Top Content: Star + Title */}
+                    <div className={`w-full flex flex-col ${isRTL ? "items-end" : "items-start"} pt-0.5 sm:pt-1`}>
                       
                       {/* Sparkle 4-point Star in accent color */}
                       <div className="mb-0.5 sm:mb-1">
@@ -146,36 +133,14 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
 
                       {/* Course Title */}
                       <h2
-                        className="font-black text-lg sm:text-2xl lg:text-[28px] leading-tight tracking-tight text-right drop-shadow-xs"
+                        className={`font-black text-lg sm:text-2xl lg:text-[28px] leading-tight tracking-tight ${isRTL ? "text-right" : "text-left"} drop-shadow-xs`}
                         style={{ color: item.accentColor }}
                       >
                         {item.title}
                       </h2>
-
-                      {/* 2-line Subtitle in Crisp White */}
-                      <p className="text-slate-100 text-[11px] sm:text-[13px] font-medium leading-relaxed mt-1 sm:mt-2 text-right">
-                        {item.subtitleLine1}
-                        <br />
-                        {item.subtitleLine2}
-                      </p>
                     </div>
 
-                    {/* Bottom Action: ابدأ الآن ►►► */}
-                    <div className="w-full flex items-center justify-end gap-1.5 pt-1.5 sm:pt-2 border-t border-white/10 group-hover:border-white/20 transition-colors">
-                      <span className="text-[11px] sm:text-[13px] font-bold text-white group-hover:underline">
-                        ابدأ الآن
-                      </span>
-                      <div
-                        className="flex items-center text-[10px] sm:text-xs font-black tracking-tighter"
-                        style={{ color: item.accentColor }}
-                      >
-                        <span>►</span>
-                        <span>►</span>
-                        <span>►</span>
-                      </div>
                     </div>
-
-                  </div>
                 </div>
               </div>
             );

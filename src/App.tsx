@@ -92,7 +92,15 @@ function MainApp() {
               }}
               onSelectCourse={handleSelectCourse}
               onOpenContact={() => setContactModalOpen(true)}
-              onOpenAbout={() => setAboutModalOpen(true)}
+              onOpenAbout={() => {
+                setActiveTab("home");
+                setTimeout(() => {
+                  const el = document.getElementById("about-section");
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth" });
+                  }
+                }, 100);
+              }}
               setActiveTab={setActiveTab}
             />
           )}

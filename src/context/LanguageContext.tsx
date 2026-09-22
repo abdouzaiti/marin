@@ -87,6 +87,10 @@ export interface Translations {
   ctaDesc: string;
   ctaButton: string;
   contactUsHeading: string;
+  authHeroTitle: string;
+  authHeroDesc: string;
+  authHighlight1: string;
+  authHighlight2: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -175,6 +179,10 @@ const translations: Record<Language, Translations> = {
     ctaDesc: "Rejoignez l'élite des entrepreneurs et profitez des dernières masterclasses stratégiques et pratiques de l'académie MARIN.",
     ctaButton: "Accéder à l'académie et commencer",
     contactUsHeading: "Contactez-nous",
+    authHeroTitle: "L'excellence dans la formation et le développement professionnel",
+    authHeroDesc: "Rejoignez l'élite des entrepreneurs, managers et professionnels pour développer vos compétences à travers des programmes de formation professionnels à fort impact.",
+    authHighlight1: "Programmes de formation accrédités et cursus d'excellence",
+    authHighlight2: "Suivi précis de la progression et certificats professionnels",
   },
   ar: {
     home: "الرئيسية",
@@ -261,6 +269,10 @@ const translations: Record<Language, Translations> = {
     ctaDesc: "انضم إلى نخبة رواد الأعمال واستفد من أحدث الدورات الاستراتيجية والتطبيقية في أكاديمية مارين.",
     ctaButton: "دخول الأكاديمية والبدء الآن",
     contactUsHeading: "تواصل معنا",
+    authHeroTitle: "التميز في التدريب والتطوير المهني",
+    authHeroDesc: "انضم إلى نخبة رواد الأعمال، المدراء والمهنيين لتطوير مهاراتك من خلال برامج ودورات تدريبية احترافية عالية التأثير.",
+    authHighlight1: "برامج تدريبية معتمدة ومناهج تعليمية متميزة",
+    authHighlight2: "متابعة دقيقة لمستوى التقدم وشهادات إتمام مهنية",
   },
   en: {
     home: "Home",
@@ -347,6 +359,10 @@ const translations: Record<Language, Translations> = {
     ctaDesc: "Join elite entrepreneurs and benefit from the latest strategic and practical courses at MARIN Academy.",
     ctaButton: "Enter Academy & Start Now",
     contactUsHeading: "Contact Us",
+    authHeroTitle: "Excellence in Training & Professional Development",
+    authHeroDesc: "Join elite entrepreneurs, managers and professionals to develop your skills through high-impact professional training programs.",
+    authHighlight1: "Accredited training programs and distinguished curricula",
+    authHighlight2: "Precise progress tracking and professional completion certificates",
   },
 };
 
