@@ -640,35 +640,17 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
 
                   <div className={`space-y-4 relative z-10 ${language === "ar" ? "text-right" : "text-left"}`}>
                     
-                    {/* Icon Badge */}
-                    <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-[#1d8ccc] flex items-center justify-center group-hover:bg-[#1d8ccc] group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-xs">
-                      <Compass className="w-6 h-6" />
-                    </div>
-
-                    {/* Title & Subtitle */}
-                    <div className="space-y-1">
+                    {/* Title */}
+                    <div>
                       <h3 className="text-xl sm:text-2xl font-black text-[#041d37] tracking-tight group-hover:text-[#1d8ccc] transition-colors">
                         {t("visionTitle")}
                       </h3>
-                      <p className="text-[11px] font-bold text-[#1d8ccc] tracking-wider uppercase">
-                        MARIN Vision
-                      </p>
                     </div>
 
                     {/* Description */}
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                       {t("visionDesc")}
                     </p>
-                  </div>
-
-                  {/* Card Bottom Footer */}
-                  <div className="mt-8 pt-4 border-t border-slate-100/80 flex items-center justify-between text-xs font-black relative z-10">
-                    <span className="bg-sky-50 text-[#1d8ccc] px-3.5 py-1 rounded-full border border-sky-100 text-[11px]">
-                      Pillar 01
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-[#041d37] text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 group-hover:bg-[#1d8ccc] transition-all">
-                      <ArrowLeft className={`w-4 h-4 ${language !== "ar" ? "rotate-180" : ""}`} />
-                    </div>
                   </div>
 
                 </div>
@@ -723,35 +705,17 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
 
                   <div className={`space-y-4 relative z-10 ${language === "ar" ? "text-right" : "text-left"}`}>
                     
-                    {/* Icon Badge */}
-                    <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-[#1d8ccc] flex items-center justify-center group-hover:bg-[#1d8ccc] group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-xs">
-                      <Target className="w-6 h-6" />
-                    </div>
-
-                    {/* Title & Subtitle */}
-                    <div className="space-y-1">
+                    {/* Title */}
+                    <div>
                       <h3 className="text-xl sm:text-2xl font-black text-[#041d37] tracking-tight group-hover:text-[#1d8ccc] transition-colors">
                         {t("missionTitle")}
                       </h3>
-                      <p className="text-[11px] font-bold text-[#1d8ccc] tracking-wider uppercase">
-                        MARIN Mission
-                      </p>
                     </div>
 
                     {/* Description */}
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                       {t("missionDesc")}
                     </p>
-                  </div>
-
-                  {/* Card Bottom Footer */}
-                  <div className="mt-8 pt-4 border-t border-slate-100/80 flex items-center justify-between text-xs font-black relative z-10">
-                    <span className="bg-blue-50 text-[#1d8ccc] px-3.5 py-1 rounded-full border border-blue-100 text-[11px]">
-                      Pillar 02
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-[#041d37] text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 group-hover:bg-[#1d8ccc] transition-all">
-                      <ArrowLeft className={`w-4 h-4 ${language !== "ar" ? "rotate-180" : ""}`} />
-                    </div>
                   </div>
 
                 </div>
@@ -792,10 +756,10 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                 {/* Central White Content Canvas */}
                 <div className="bg-white px-7 py-6 flex-1 flex flex-col justify-between text-slate-800 relative z-10 border-x border-white">
                   
-                  {/* Internal Subtle Amber Wave Accent inside card */}
+                  {/* Internal Subtle Sky Wave Accent inside card */}
                   <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
                     <svg
-                      className="absolute bottom-0 left-0 w-full h-24 text-amber-100"
+                      className="absolute bottom-0 left-0 w-full h-24 text-sky-100"
                       viewBox="0 0 400 100"
                       fill="currentColor"
                       preserveAspectRatio="none"
@@ -806,35 +770,17 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
 
                   <div className={`space-y-4 relative z-10 ${language === "ar" ? "text-right" : "text-left"}`}>
                     
-                    {/* Icon Badge */}
-                    <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-xs">
-                      <ShieldCheck className="w-6 h-6" />
-                    </div>
-
-                    {/* Title & Subtitle */}
-                    <div className="space-y-1">
-                      <h3 className="text-xl sm:text-2xl font-black text-[#041d37] tracking-tight group-hover:text-amber-600 transition-colors">
+                    {/* Title */}
+                    <div>
+                      <h3 className="text-xl sm:text-2xl font-black text-[#041d37] tracking-tight group-hover:text-[#1d8ccc] transition-colors">
                         {t("valuesTitle")}
                       </h3>
-                      <p className="text-[11px] font-bold text-amber-600 tracking-wider uppercase">
-                        MARIN Principles
-                      </p>
                     </div>
 
                     {/* Description */}
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                       {t("valuesDesc")}
                     </p>
-                  </div>
-
-                  {/* Card Bottom Footer */}
-                  <div className="mt-8 pt-4 border-t border-slate-100/80 flex items-center justify-between text-xs font-black relative z-10">
-                    <span className="bg-amber-50 text-amber-600 px-3.5 py-1 rounded-full border border-amber-100 text-[11px]">
-                      Pillar 03
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-[#041d37] text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 group-hover:bg-amber-500 transition-all">
-                      <ArrowLeft className={`w-4 h-4 ${language !== "ar" ? "rotate-180" : ""}`} />
-                    </div>
                   </div>
 
                 </div>
