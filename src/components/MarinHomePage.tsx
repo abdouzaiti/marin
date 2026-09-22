@@ -18,7 +18,10 @@ import {
   Handshake,
   Network,
   Globe,
-  Share2
+  Share2,
+  Compass,
+  Target,
+  ShieldCheck
 } from "lucide-react";
 import { motion } from "motion/react";
 import { VideoCourse } from "../data/videoCourses";
@@ -568,13 +571,13 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
         </div>
       </section>
 
-      {/* 3. "من نحن" (ABOUT US) SECTION WITH CURVED BLUE BACKGROUND */}
+      {/* 3. "من نحن" (ABOUT US) SECTION WITH CURVED BLUE BACKGROUND in #1d8ccc */}
       <section className="relative w-full overflow-hidden my-4 sm:my-8" id="about-section">
         
         {/* Top Curved Edge (Dipping concave arc inspired by reference image) */}
         <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
           <svg
-            className="w-full h-10 sm:h-16 lg:h-20 block text-[#eef6fc]"
+            className="w-full h-10 sm:h-16 lg:h-20 block text-[#1d8ccc]"
             viewBox="0 0 1440 90"
             fill="currentColor"
             preserveAspectRatio="none"
@@ -583,16 +586,16 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
           </svg>
         </div>
 
-        {/* Central Content Canvas with Soft Blue Background */}
-        <div className="bg-[#eef6fc] w-full py-8 sm:py-16 px-4 sm:px-6">
+        {/* Central Content Canvas with Blue Background in #1d8ccc */}
+        <div className="bg-[#1d8ccc] w-full py-8 sm:py-16 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto space-y-10 sm:space-y-14">
 
             {/* Section Heading */}
             <div className="flex flex-col items-center justify-center text-center space-y-2">
-              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#041d37] tracking-tight">
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
                 {t("aboutTitle")}
               </h2>
-              <p className="text-xs sm:text-sm md:text-base text-slate-600 max-w-2xl mx-auto font-medium leading-relaxed pt-1">
+              <p className="text-xs sm:text-sm md:text-base text-blue-100 max-w-2xl mx-auto font-medium leading-relaxed pt-1">
                 {t("aboutSubtitle")}
               </p>
             </div>
@@ -606,16 +609,80 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
-                className={`bg-white rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 border border-blue-100 ${language === "ar" ? "text-right" : "text-left"} relative overflow-hidden group`}
+                className="group relative flex flex-col h-full transform hover:-translate-y-2.5 transition-all duration-500 drop-shadow-xl hover:drop-shadow-2xl"
               >
-                <div className={`absolute top-0 ${language === "ar" ? "right-0" : "left-0"} w-24 h-24 bg-blue-50 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform`} />
-                <div className="space-y-3 relative z-10">
-                  <h3 className="text-lg sm:text-xl font-black text-[#041d37]">
-                    {t("visionTitle")}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                    {t("visionDesc")}
-                  </p>
+                {/* Top White Wave Cap for Card 1 */}
+                <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
+                  <svg
+                    className="w-full h-12 sm:h-14 block text-white"
+                    viewBox="0 0 400 50"
+                    fill="currentColor"
+                    preserveAspectRatio="none"
+                  >
+                    <path d="M0,50 C120,5 280,45 400,15 L400,50 L0,50 Z" />
+                  </svg>
+                </div>
+
+                {/* Central White Content Canvas */}
+                <div className="bg-white px-7 py-6 flex-1 flex flex-col justify-between text-slate-800 relative z-10 border-x border-white">
+                  
+                  {/* Internal Subtle Sky Wave Accent inside card */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
+                    <svg
+                      className="absolute bottom-0 left-0 w-full h-24 text-sky-100"
+                      viewBox="0 0 400 100"
+                      fill="currentColor"
+                      preserveAspectRatio="none"
+                    >
+                      <path d="M0,40 C140,90 260,10 400,50 L400,100 L0,100 Z" />
+                    </svg>
+                  </div>
+
+                  <div className={`space-y-4 relative z-10 ${language === "ar" ? "text-right" : "text-left"}`}>
+                    
+                    {/* Icon Badge */}
+                    <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-[#1d8ccc] flex items-center justify-center group-hover:bg-[#1d8ccc] group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-xs">
+                      <Compass className="w-6 h-6" />
+                    </div>
+
+                    {/* Title & Subtitle */}
+                    <div className="space-y-1">
+                      <h3 className="text-xl sm:text-2xl font-black text-[#041d37] tracking-tight group-hover:text-[#1d8ccc] transition-colors">
+                        {t("visionTitle")}
+                      </h3>
+                      <p className="text-[11px] font-bold text-[#1d8ccc] tracking-wider uppercase">
+                        MARIN Vision
+                      </p>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                      {t("visionDesc")}
+                    </p>
+                  </div>
+
+                  {/* Card Bottom Footer */}
+                  <div className="mt-8 pt-4 border-t border-slate-100/80 flex items-center justify-between text-xs font-black relative z-10">
+                    <span className="bg-sky-50 text-[#1d8ccc] px-3.5 py-1 rounded-full border border-sky-100 text-[11px]">
+                      Pillar 01
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-[#041d37] text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 group-hover:bg-[#1d8ccc] transition-all">
+                      <ArrowLeft className={`w-4 h-4 ${language !== "ar" ? "rotate-180" : ""}`} />
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Bottom White Wave Cap for Card 1 */}
+                <div className="w-full overflow-hidden leading-none pointer-events-none -mt-[1px]">
+                  <svg
+                    className="w-full h-12 sm:h-14 block text-white"
+                    viewBox="0 0 400 50"
+                    fill="currentColor"
+                    preserveAspectRatio="none"
+                  >
+                    <path d="M0,0 L400,0 C280,45 120,5 0,50 Z" />
+                  </svg>
                 </div>
               </motion.div>
 
@@ -625,16 +692,80 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className={`bg-white rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 border border-blue-100 ${language === "ar" ? "text-right" : "text-left"} relative overflow-hidden group`}
+                className="group relative flex flex-col h-full transform hover:-translate-y-2.5 transition-all duration-500 drop-shadow-xl hover:drop-shadow-2xl"
               >
-                <div className={`absolute top-0 ${language === "ar" ? "right-0" : "left-0"} w-24 h-24 bg-sky-50 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform`} />
-                <div className="space-y-3 relative z-10">
-                  <h3 className="text-lg sm:text-xl font-black text-[#041d37]">
-                    {t("missionTitle")}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                    {t("missionDesc")}
-                  </p>
+                {/* Top White Wave Cap for Card 2 */}
+                <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
+                  <svg
+                    className="w-full h-12 sm:h-14 block text-white"
+                    viewBox="0 0 400 50"
+                    fill="currentColor"
+                    preserveAspectRatio="none"
+                  >
+                    <path d="M0,50 C140,55 260,0 400,45 L400,50 L0,50 Z" />
+                  </svg>
+                </div>
+
+                {/* Central White Content Canvas */}
+                <div className="bg-white px-7 py-6 flex-1 flex flex-col justify-between text-slate-800 relative z-10 border-x border-white">
+                  
+                  {/* Internal Subtle Blue Wave Accent inside card */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
+                    <svg
+                      className="absolute bottom-0 left-0 w-full h-24 text-blue-100"
+                      viewBox="0 0 400 100"
+                      fill="currentColor"
+                      preserveAspectRatio="none"
+                    >
+                      <path d="M0,60 C160,10 280,80 400,30 L400,100 L0,100 Z" />
+                    </svg>
+                  </div>
+
+                  <div className={`space-y-4 relative z-10 ${language === "ar" ? "text-right" : "text-left"}`}>
+                    
+                    {/* Icon Badge */}
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-[#1d8ccc] flex items-center justify-center group-hover:bg-[#1d8ccc] group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-xs">
+                      <Target className="w-6 h-6" />
+                    </div>
+
+                    {/* Title & Subtitle */}
+                    <div className="space-y-1">
+                      <h3 className="text-xl sm:text-2xl font-black text-[#041d37] tracking-tight group-hover:text-[#1d8ccc] transition-colors">
+                        {t("missionTitle")}
+                      </h3>
+                      <p className="text-[11px] font-bold text-[#1d8ccc] tracking-wider uppercase">
+                        MARIN Mission
+                      </p>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                      {t("missionDesc")}
+                    </p>
+                  </div>
+
+                  {/* Card Bottom Footer */}
+                  <div className="mt-8 pt-4 border-t border-slate-100/80 flex items-center justify-between text-xs font-black relative z-10">
+                    <span className="bg-blue-50 text-[#1d8ccc] px-3.5 py-1 rounded-full border border-blue-100 text-[11px]">
+                      Pillar 02
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-[#041d37] text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 group-hover:bg-[#1d8ccc] transition-all">
+                      <ArrowLeft className={`w-4 h-4 ${language !== "ar" ? "rotate-180" : ""}`} />
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Bottom White Wave Cap for Card 2 */}
+                <div className="w-full overflow-hidden leading-none pointer-events-none -mt-[1px]">
+                  <svg
+                    className="w-full h-12 sm:h-14 block text-white"
+                    viewBox="0 0 400 50"
+                    fill="currentColor"
+                    preserveAspectRatio="none"
+                  >
+                    <path d="M0,0 L400,0 C260,5 120,50 0,20 Z" />
+                  </svg>
                 </div>
               </motion.div>
 
@@ -644,16 +775,80 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className={`bg-white rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 border border-blue-100 ${language === "ar" ? "text-right" : "text-left"} relative overflow-hidden group`}
+                className="group relative flex flex-col h-full transform hover:-translate-y-2.5 transition-all duration-500 drop-shadow-xl hover:drop-shadow-2xl"
               >
-                <div className={`absolute top-0 ${language === "ar" ? "right-0" : "left-0"} w-24 h-24 bg-indigo-50 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform`} />
-                <div className="space-y-3 relative z-10">
-                  <h3 className="text-lg sm:text-xl font-black text-[#041d37]">
-                    {t("valuesTitle")}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                    {t("valuesDesc")}
-                  </p>
+                {/* Top White Wave Cap for Card 3 */}
+                <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
+                  <svg
+                    className="w-full h-12 sm:h-14 block text-white"
+                    viewBox="0 0 400 50"
+                    fill="currentColor"
+                    preserveAspectRatio="none"
+                  >
+                    <path d="M0,50 C120,10 280,50 400,5 L400,50 L0,50 Z" />
+                  </svg>
+                </div>
+
+                {/* Central White Content Canvas */}
+                <div className="bg-white px-7 py-6 flex-1 flex flex-col justify-between text-slate-800 relative z-10 border-x border-white">
+                  
+                  {/* Internal Subtle Amber Wave Accent inside card */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
+                    <svg
+                      className="absolute bottom-0 left-0 w-full h-24 text-amber-100"
+                      viewBox="0 0 400 100"
+                      fill="currentColor"
+                      preserveAspectRatio="none"
+                    >
+                      <path d="M0,30 C120,80 270,10 400,60 L400,100 L0,100 Z" />
+                    </svg>
+                  </div>
+
+                  <div className={`space-y-4 relative z-10 ${language === "ar" ? "text-right" : "text-left"}`}>
+                    
+                    {/* Icon Badge */}
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-xs">
+                      <ShieldCheck className="w-6 h-6" />
+                    </div>
+
+                    {/* Title & Subtitle */}
+                    <div className="space-y-1">
+                      <h3 className="text-xl sm:text-2xl font-black text-[#041d37] tracking-tight group-hover:text-amber-600 transition-colors">
+                        {t("valuesTitle")}
+                      </h3>
+                      <p className="text-[11px] font-bold text-amber-600 tracking-wider uppercase">
+                        MARIN Principles
+                      </p>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                      {t("valuesDesc")}
+                    </p>
+                  </div>
+
+                  {/* Card Bottom Footer */}
+                  <div className="mt-8 pt-4 border-t border-slate-100/80 flex items-center justify-between text-xs font-black relative z-10">
+                    <span className="bg-amber-50 text-amber-600 px-3.5 py-1 rounded-full border border-amber-100 text-[11px]">
+                      Pillar 03
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-[#041d37] text-white flex items-center justify-center shadow-md transform group-hover:-translate-x-1.5 group-hover:bg-amber-500 transition-all">
+                      <ArrowLeft className={`w-4 h-4 ${language !== "ar" ? "rotate-180" : ""}`} />
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Bottom White Wave Cap for Card 3 */}
+                <div className="w-full overflow-hidden leading-none pointer-events-none -mt-[1px]">
+                  <svg
+                    className="w-full h-12 sm:h-14 block text-white"
+                    viewBox="0 0 400 50"
+                    fill="currentColor"
+                    preserveAspectRatio="none"
+                  >
+                    <path d="M0,0 L400,0 C300,55 100,10 0,45 Z" />
+                  </svg>
                 </div>
               </motion.div>
 
@@ -665,7 +860,7 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
         {/* Bottom Curved Edge (Bowing convex arc extending into the white section below) */}
         <div className="w-full overflow-hidden leading-none pointer-events-none -mt-[1px]">
           <svg
-            className="w-full h-10 sm:h-16 lg:h-20 block text-[#eef6fc]"
+            className="w-full h-10 sm:h-16 lg:h-20 block text-[#1d8ccc]"
             viewBox="0 0 1440 90"
             fill="currentColor"
             preserveAspectRatio="none"
