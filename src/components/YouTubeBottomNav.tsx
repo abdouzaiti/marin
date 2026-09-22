@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, Compass, FolderKanban, User } from "lucide-react";
+import { Home, GraduationCap, Compass, User } from "lucide-react";
 
 interface YouTubeBottomNavProps {
   activeTab: string;
@@ -29,6 +29,19 @@ export const YouTubeBottomNav: React.FC<YouTubeBottomNavProps> = ({
       </button>
 
       <button
+        onClick={() => {
+          setActiveTab("academy");
+          setSelectedCategory("Tout");
+        }}
+        className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors cursor-pointer ${
+          activeTab === "academy" || activeTab === "courses" ? "text-blue-600 font-bold" : "text-slate-600 hover:text-slate-900"
+        }`}
+      >
+        <GraduationCap className={`w-5 h-5 mb-0.5 ${activeTab === "academy" || activeTab === "courses" ? "text-blue-600 stroke-[2.5]" : "text-slate-600"}`} />
+        <span>الأكاديمية</span>
+      </button>
+
+      <button
         onClick={() => setActiveTab("explore")}
         className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors cursor-pointer ${
           activeTab === "explore" ? "text-blue-600 font-bold" : "text-slate-600 hover:text-slate-900"
@@ -36,17 +49,6 @@ export const YouTubeBottomNav: React.FC<YouTubeBottomNavProps> = ({
       >
         <Compass className={`w-5 h-5 mb-0.5 ${activeTab === "explore" ? "text-blue-600 stroke-[2.5]" : "text-slate-600"}`} />
         <span>استكشاف</span>
-      </button>
-
-      <button
-        onClick={() => {
-          setActiveTab("home");
-          setSelectedCategory("المحاسبة والمالية");
-        }}
-        className="flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
-      >
-        <FolderKanban className="w-5 h-5 mb-0.5 text-slate-600" />
-        <span>المسارات</span>
       </button>
 
       <button
@@ -61,3 +63,4 @@ export const YouTubeBottomNav: React.FC<YouTubeBottomNavProps> = ({
     </nav>
   );
 };
+

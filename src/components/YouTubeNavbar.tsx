@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { DoorOpen } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { UserProfile } from "../types";
 
 interface YouTubeNavbarProps {
@@ -18,26 +17,18 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
   onOpenContact,
   onOpenAbout,
 }) => {
-  const bannerRef = useRef<HTMLDivElement>(null);
-  const [isScrolledPast, setIsScrolledPast] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  // Monitor scroll to detect when the big banner hides out of the viewport
   useEffect(() => {
-    const checkScrollPosition = () => {
-      if (bannerRef.current) {
-        const rect = bannerRef.current.getBoundingClientRect();
-        // When bottom of banner is at or above top edge of window, it is hidden
-        setIsScrolledPast(rect.bottom <= 20);
-      }
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 12);
     };
 
-    window.addEventListener("scroll", checkScrollPosition, { passive: true });
-    document.addEventListener("scroll", checkScrollPosition, { passive: true });
-    checkScrollPosition();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
 
     return () => {
-      window.removeEventListener("scroll", checkScrollPosition);
-      document.removeEventListener("scroll", checkScrollPosition);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -45,67 +36,81 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const isHome = activeTab === "home";
+
   return (
-    <>
-      {/* 1. Main Big Hero Banner Header Section (Targeted element) */}
-      <header className="w-full px-2 sm:px-6 pt-2 sm:pt-5 pb-2 bg-transparent select-none z-40">
-        <div
-          ref={bannerRef}
-          className="relative w-[1400px] max-w-full h-[79px] mx-auto rounded-[20px] sm:rounded-[26px] bg-[#091f3a] text-white px-3 sm:px-6 md:px-8 py-1.5 sm:py-2.5 flex items-center justify-between shadow-xl border border-white/10"
-        >
-          {/* Left Side: Action CTA Button */}
-          <div className="flex items-center gap-1.5 sm:gap-3 z-10 shrink-0">
-            <button
-              onClick={() => setActiveTab("register")}
-              className="rounded-full bg-[#0062c4] hover:bg-[#0070e0] text-white font-bold text-[11px] sm:text-xs md:text-sm px-2.5 sm:px-5 md:px-6 py-1.5 sm:py-2 md:py-2.5 flex items-center gap-1.5 sm:gap-2 shadow-md shadow-blue-900/30 hover:shadow-blue-500/20 active:scale-98 transition-all cursor-pointer"
-            >
-              <span>ابدأ الآن</span>
-              <DoorOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-            </button>
-          </div>
-
-          {/* Center: Brand Logo in Hero Section (Jumps to topbar when hidden with 360° turn) */}
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-200 ease-out ${
+        isScrolled
+          ? "bg-white/95 text-[#041d37] shadow-sm border-b border-slate-200/80 backdrop-blur-md"
+          : isHome
+            ? "bg-transparent text-[#041d37] shadow-none border-b border-transparent"
+            : "bg-white/95 text-[#041d37] shadow-sm border-b border-slate-200/80 backdrop-blur-md"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between">
+        
+        {/* Right Side (in RTL): Logo + Navigation Menu Links */}
+        <div className="flex items-center gap-6 sm:gap-8">
+          {/* Brand Logo */}
           <div
-            onClick={() => setActiveTab("home")}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer transition-transform hover:opacity-90 active:scale-98 z-10"
+            onClick={() => {
+              setActiveTab("home");
+              scrollToTop();
+            }}
+            className="flex items-center gap-2 cursor-pointer transition-opacity hover:opacity-90 active:scale-98"
           >
-            {!isScrolledPast && (
-              <motion.img
-                layoutId="marin-academy-jumping-logo"
-                src="/logo.png"
-                alt="MARIN Academy"
-                className="h-[46px] sm:h-[58px] md:h-[64px] w-auto max-w-[115px] sm:max-w-[150px] md:max-w-[170px] object-contain select-none"
-                animate={{ rotate: 0, scale: 1 }}
-                whileHover={{ rotate: 360, transition: { duration: 0.65, ease: "easeInOut" } }}
-                transition={{
-                  type: "spring",
-                  stiffness: 260,
-                  damping: 22,
-                  mass: 0.85,
-                  rotate: {
-                    duration: 0.7,
-                    ease: [0.34, 1.56, 0.64, 1],
-                  },
-                }}
-              />
-            )}
+            <img
+              src="/logo.png"
+              alt="MARIN Academy"
+              className="h-9 sm:h-11 w-auto max-w-[130px] sm:max-w-[160px] object-contain select-none"
+            />
           </div>
 
-          {/* Right Side Nav Links */}
-          <div className="flex items-center gap-1 sm:gap-3 md:gap-4 z-10 shrink-0">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-1.5">
             <button
               onClick={() => {
                 setActiveTab("home");
                 scrollToTop();
               }}
-              className="text-white hover:text-blue-300 font-bold text-xs sm:text-sm px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full hover:bg-white/10 transition-colors cursor-pointer hidden sm:block"
+              className={`text-xs sm:text-sm font-bold px-3.5 py-2 rounded-lg transition-colors cursor-pointer ${
+                activeTab === "home"
+                  ? isScrolled
+                    ? "bg-blue-50 text-[#0062c4]"
+                    : "bg-white text-[#041d37] shadow-sm"
+                  : isScrolled
+                    ? "text-slate-700 hover:text-[#0062c4] hover:bg-slate-100"
+                    : "text-white/90 hover:text-white hover:bg-white/20"
+              }`}
             >
               الرئيسية
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("academy");
+                scrollToTop();
+              }}
+              className={`text-xs sm:text-sm font-bold px-3.5 py-2 rounded-lg transition-all cursor-pointer ${
+                activeTab === "academy" || activeTab === "courses" || activeTab === "watch"
+                  ? isScrolled
+                    ? "bg-[#0062c4] text-white shadow-xs"
+                    : "bg-white text-[#041d37] shadow-sm"
+                  : isScrolled
+                    ? "text-slate-700 hover:text-[#0062c4] hover:bg-slate-100"
+                    : "text-white/90 hover:text-white hover:bg-white/20"
+              }`}
+            >
+              الأكاديمية
             </button>
             {onOpenAbout && (
               <button
                 onClick={onOpenAbout}
-                className="text-slate-200 hover:text-white transition-colors text-xs sm:text-sm font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full hover:bg-white/10 cursor-pointer hidden md:block"
+                className={`transition-colors text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg cursor-pointer ${
+                  isScrolled
+                    ? "text-slate-700 hover:text-[#0062c4] hover:bg-slate-100"
+                    : "text-white/90 hover:text-white hover:bg-white/20"
+                }`}
               >
                 من نحن
               </button>
@@ -113,96 +118,65 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
             {onOpenContact && (
               <button
                 onClick={onOpenContact}
-                className="text-slate-200 hover:text-white transition-colors text-xs sm:text-sm font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full hover:bg-white/10 cursor-pointer hidden sm:block"
+                className={`transition-colors text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg cursor-pointer ${
+                  isScrolled
+                    ? "text-slate-700 hover:text-[#0062c4] hover:bg-slate-100"
+                    : "text-white/90 hover:text-white hover:bg-white/20"
+                }`}
               >
                 تواصل معنا
               </button>
             )}
-          </div>
+          </nav>
         </div>
-      </header>
 
-      {/* 2. Classic Topbar that appears directly when the big section hides */}
-      <AnimatePresence>
-        {isScrolledPast && (
-          <motion.div
-            initial={{ y: -79, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -79, opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed top-0 left-0 right-0 z-50 h-[79px] bg-[#091f3a]/95 backdrop-blur-md shadow-2xl border-b border-white/10 px-3 sm:px-6 md:px-8 flex items-center justify-between"
-          >
-            {/* Left: Quick Action Button */}
-            <div className="flex items-center gap-1.5 sm:gap-3 z-10 shrink-0">
-              <button
-                onClick={() => setActiveTab("register")}
-                className="rounded-full bg-[#0062c4] hover:bg-[#0070e0] text-white font-bold text-[11px] sm:text-xs md:text-sm px-2.5 sm:px-5 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2 shadow-md shadow-blue-900/40 hover:shadow-blue-500/25 active:scale-98 transition-all cursor-pointer"
-              >
-                <span>ابدأ الآن</span>
-                <DoorOpen className="w-3.5 h-3.5 text-white" />
-              </button>
-            </div>
-
-            {/* Center: The Logo that smoothly jumped into the classic topbar! */}
-            <div
+        {/* Left Side (in RTL): Action CTA Button & Mobile Links (Hidden on phone screens) */}
+        <div className="hidden md:flex items-center gap-3">
+          {/* Mobile Fast Tab Switching */}
+          <div className="flex md:hidden items-center gap-1">
+            <button
               onClick={() => {
                 setActiveTab("home");
                 scrollToTop();
               }}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity z-10"
+              className={`text-xs font-bold px-2.5 py-1.5 rounded-md ${
+                activeTab === "home" 
+                  ? isScrolled ? "bg-[#0062c4] text-white" : "bg-white text-[#041d37]" 
+                  : isScrolled ? "text-slate-700" : "text-white"
+              }`}
             >
-              <motion.img
-                layoutId="marin-academy-jumping-logo"
-                src="/logo.png"
-                alt="MARIN Academy"
-                className="h-8 sm:h-11 md:h-12 w-auto max-w-[110px] sm:max-w-[160px] md:max-w-[200px] object-contain select-none"
-                animate={{ rotate: 360, scale: 1 }}
-                whileHover={{ rotate: 720, transition: { duration: 0.65, ease: "easeInOut" } }}
-                transition={{
-                  type: "spring",
-                  stiffness: 260,
-                  damping: 22,
-                  mass: 0.85,
-                  rotate: {
-                    duration: 0.7,
-                    ease: [0.34, 1.56, 0.64, 1],
-                  },
-                }}
-              />
-            </div>
+              الرئيسية
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("academy");
+                scrollToTop();
+              }}
+              className={`text-xs font-bold px-2.5 py-1.5 rounded-md ${
+                activeTab === "academy" 
+                  ? isScrolled ? "bg-[#0062c4] text-white" : "bg-white text-[#041d37]" 
+                  : isScrolled ? "text-slate-700" : "text-white"
+              }`}
+            >
+              الأكاديمية
+            </button>
+          </div>
 
-            {/* Right: Quick Links / Contact Modal trigger */}
-            <div className="flex items-center gap-1 sm:gap-3 z-10 shrink-0">
-              <button
-                onClick={() => {
-                  setActiveTab("home");
-                  scrollToTop();
-                }}
-                className="text-white hover:text-blue-300 font-bold text-xs sm:text-sm px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full hover:bg-white/10 transition-colors cursor-pointer hidden sm:block"
-              >
-                الرئيسية
-              </button>
-              {onOpenContact && (
-                <button
-                  onClick={onOpenContact}
-                  className="text-slate-200 hover:text-white transition-colors text-xs sm:text-sm font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full hover:bg-white/10 cursor-pointer hidden sm:block"
-                >
-                  تواصل معنا
-                </button>
-              )}
-              {onOpenAbout && (
-                <button
-                  onClick={onOpenAbout}
-                  className="text-slate-200 hover:text-white transition-colors text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full hover:bg-white/10 cursor-pointer hidden sm:block"
-                >
-                  من نحن
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+          <button
+            onClick={() => setActiveTab("register")}
+            className={`rounded-full font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 flex items-center gap-1.5 sm:gap-2 shadow-md active:scale-98 transition-all cursor-pointer ${
+              isScrolled
+                ? "bg-[#0062c4] hover:bg-[#0051a3] text-white shadow-blue-900/20"
+                : "bg-[#041d37] hover:bg-[#072a4f] text-white shadow-black/20"
+            }`}
+          >
+            <span>ابدأ الآن</span>
+            <DoorOpen className="w-4 h-4 text-white" />
+          </button>
+        </div>
+
+      </div>
+    </header>
   );
 };
 

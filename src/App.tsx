@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Mail, Phone, MapPin, ExternalLink } from "lucide-react";
 import { YouTubeNavbar } from "./components/YouTubeNavbar";
 import { YouTubeBottomNav } from "./components/YouTubeBottomNav";
+import { MarinHomePage } from "./components/MarinHomePage";
 import { YouTubeHomeFeed } from "./components/YouTubeHomeFeed";
 import { YouTubeWatchPage } from "./components/YouTubeWatchPage";
 import { YouTubeStudioModal } from "./components/YouTubeStudioModal";
@@ -70,25 +71,25 @@ function MainApp() {
         onOpenAbout={() => setAboutModalOpen(true)}
       />
 
-      <div className="flex flex-1 w-full pb-14 md:pb-0">
+      <div className={`flex flex-1 w-full pb-14 md:pb-0 ${activeTab !== "home" ? "pt-16 sm:pt-18" : "pt-0"}`}>
         
         {/* Main Content Area - Full width */}
         <main className="flex-1 flex flex-col w-full">
-          {(activeTab === "home" || activeTab === "courses") && (
-            <YouTubeHomeFeed
+          {activeTab === "home" && (
+            <MarinHomePage
               courses={courses}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              selectCourse={handleSelectCourse}
-              openStudio={() => setStudioOpen(true)}
-              userProfile={userProfile}
+              onExploreAcademy={() => {
+                setActiveTab("academy");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onSelectCourse={handleSelectCourse}
+              onOpenContact={() => setContactModalOpen(true)}
+              onOpenAbout={() => setAboutModalOpen(true)}
               setActiveTab={setActiveTab}
             />
           )}
 
-          {activeTab === "explore" && (
+          {(activeTab === "academy" || activeTab === "courses" || activeTab === "explore") && (
             <YouTubeHomeFeed
               courses={courses}
               selectedCategory={selectedCategory}
@@ -107,7 +108,7 @@ function MainApp() {
               course={selectedCourse}
               courses={courses}
               selectCourse={handleSelectCourse}
-              goHome={() => setActiveTab("home")}
+              goHome={() => setActiveTab("academy")}
               userProfile={userProfile}
               completeModule={completeModule}
             />

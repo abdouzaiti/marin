@@ -119,6 +119,17 @@ export const YouTubeHomeFeed: React.FC<YouTubeHomeFeedProps> = ({
       
       {/* Hero Content Area */}
       <div className="pt-4 sm:pt-8 pb-12 sm:pb-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center">
+        
+        {/* Academy Header */}
+        <div className="text-center space-y-1 sm:space-y-2 mb-6" dir="rtl">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#0062c4] text-xs font-bold mb-1">
+            <span>دورات أكاديمية مارين</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#041d37] tracking-tight">
+            الدورات والبرامج التدريبية
+          </h2>
+        </div>
+
         {/* Search Bar for Searching Courses (شريط البحث في الدورات) */}
         <div className="w-full max-w-xl mx-auto mb-8 sm:mb-12 px-1">
           <div className="relative flex items-center bg-white rounded-full border border-slate-200/90 shadow-sm hover:border-slate-300 focus-within:border-[#0062c4] focus-within:ring-4 focus-within:ring-[#0062c4]/15 transition-all duration-200 px-3.5 sm:px-5 py-2 sm:py-2.5">
