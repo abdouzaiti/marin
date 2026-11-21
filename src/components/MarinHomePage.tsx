@@ -174,18 +174,6 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                 {/* Secondary Blue Gradient Wave Disk behind */}
                 <div className="absolute w-72 sm:w-88 h-72 sm:h-88 rounded-full bg-white/15 blur-xl -bottom-4 -left-4 pointer-events-none" />
 
-                {/* Decorative Dot Matrix Patterns */}
-                <div className="absolute top-6 left-0 opacity-40 grid grid-cols-4 gap-1.5 pointer-events-none">
-                  {[...Array(16)].map((_, i) => (
-                    <span key={i} className="w-1.5 h-1.5 rounded-full bg-white" />
-                  ))}
-                </div>
-                <div className="absolute bottom-8 right-2 opacity-30 grid grid-cols-5 gap-1.5 pointer-events-none">
-                  {[...Array(15)].map((_, i) => (
-                    <span key={i} className="w-1.5 h-1.5 rounded-full bg-white" />
-                  ))}
-                </div>
-
                 {/* Main Hero Visual - Direct Transparent Graphic */}
                 <div className="relative z-10 w-full flex items-center justify-center">
                   <img

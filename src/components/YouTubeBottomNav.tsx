@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Home, GraduationCap, Compass, User } from "lucide-react";
 
 interface YouTubeBottomNavProps {
@@ -13,8 +13,29 @@ export const YouTubeBottomNav: React.FC<YouTubeBottomNavProps> = ({
   setActiveTab,
   setSelectedCategory
 }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsVisible(window.scrollY > 20);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 h-14 px-2 flex items-center justify-around shadow-lg">
+    <nav
+      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 h-14 px-2 flex items-center justify-around shadow-lg transition-all duration-300 ease-out ${
+        isVisible
+          ? "translate-y-0 opacity-100 pointer-events-auto"
+          : "translate-y-full opacity-0 pointer-events-none"
+      }`}
+    >
       <button
         onClick={() => {
           setActiveTab("home");
