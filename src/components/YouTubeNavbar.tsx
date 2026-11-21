@@ -136,31 +136,41 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
         {/* Left Side: Language Switcher & Action CTA Button */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Language Switcher (Visible on mobile & desktop) */}
-          <div className={`flex items-center gap-0.5 sm:gap-1 rounded-full p-1 border text-[11px] sm:text-xs font-bold ${
-            isTransparentHeader
-              ? "bg-white/10 border-white/20 text-white"
-              : "bg-slate-100 border-slate-200 text-slate-700"
+          <div className={`flex items-center gap-1 text-[11px] sm:text-xs font-bold ${
+            isTransparentHeader ? "text-white" : "text-slate-700"
           }`}>
             <button
               onClick={() => setLanguage("ar")}
-              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full transition-all cursor-pointer ${
-                language === "ar" ? "bg-[#1d8ccc] text-white shadow-xs" : "hover:opacity-75"
+              className={`px-2 py-1 rounded-full transition-all cursor-pointer ${
+                language === "ar"
+                  ? isTransparentHeader
+                    ? "bg-white text-[#041d37] shadow-xs"
+                    : "bg-[#1d8ccc] text-white shadow-xs"
+                  : "hover:opacity-75"
               }`}
             >
               AR
             </button>
             <button
               onClick={() => setLanguage("fr")}
-              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full transition-all cursor-pointer ${
-                language === "fr" ? "bg-[#1d8ccc] text-white shadow-xs" : "hover:opacity-75"
+              className={`px-2 py-1 rounded-full transition-all cursor-pointer ${
+                language === "fr"
+                  ? isTransparentHeader
+                    ? "bg-white text-[#041d37] shadow-xs"
+                    : "bg-[#1d8ccc] text-white shadow-xs"
+                  : "hover:opacity-75"
               }`}
             >
               FR
             </button>
             <button
               onClick={() => setLanguage("en")}
-              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full transition-all cursor-pointer ${
-                language === "en" ? "bg-[#1d8ccc] text-white shadow-xs" : "hover:opacity-75"
+              className={`px-2 py-1 rounded-full transition-all cursor-pointer ${
+                language === "en"
+                  ? isTransparentHeader
+                    ? "bg-white text-[#041d37] shadow-xs"
+                    : "bg-[#1d8ccc] text-white shadow-xs"
+                  : "hover:opacity-75"
               }`}
             >
               EN

@@ -166,56 +166,31 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
             {/* LEFT COLUMN (RTL): Visual Composite with Floating Glass Stat Badges */}
             <div className="lg:col-span-6 xl:col-span-5 flex justify-center relative">
               
-              <div className="relative w-full max-w-[380px] sm:max-w-[440px] aspect-square flex items-center justify-center">
+              <div className="relative w-full max-w-[420px] sm:max-w-[500px] aspect-square flex items-center justify-center">
                 
                 {/* Background Blue Circle Accent */}
-                <div className="absolute w-56 sm:w-72 h-56 sm:h-72 rounded-full bg-white/25 -top-2 right-4 sm:right-8 opacity-90 shadow-xl blur-xs" />
+                <div className="absolute w-60 sm:w-80 h-60 sm:h-80 rounded-full bg-white/25 -top-2 right-4 sm:right-8 opacity-90 shadow-xl blur-xs" />
                 
                 {/* Secondary Blue Gradient Wave Disk behind */}
-                <div className="absolute w-72 sm:w-88 h-72 sm:h-88 rounded-full bg-white/15 blur-xl -bottom-4 -left-4 pointer-events-none" />
+                <div className="absolute w-76 sm:w-96 h-76 sm:h-96 rounded-full bg-white/15 blur-xl -bottom-4 -left-4 pointer-events-none" />
 
-                {/* Main Hero Visual - Direct Transparent Graphic */}
+                {/* Main Hero Visual - Smooth Progressive Bottom Blur & Fade */}
                 <div className="relative z-10 w-full flex items-center justify-center">
-                  <img
-                    src="/original.avif"
-                    alt="MARIN Academy"
-                    className="w-auto h-auto max-h-[340px] sm:max-h-[440px] max-w-full object-contain drop-shadow-2xl select-none transform transition-transform duration-500 hover:scale-105"
-                  />
+                  <div className="relative inline-flex items-center justify-center transform transition-transform duration-500 hover:scale-105">
+                    <img
+                      src={encodeURI("/Équipe Marin Academy.png")}
+                      alt="Équipe MARIN Academy"
+                      className="w-auto h-auto max-h-[385px] sm:max-h-[500px] max-w-full object-contain drop-shadow-2xl select-none [mask-image:linear-gradient(to_bottom,black_66%,rgba(0,0,0,0.82)_76%,rgba(0,0,0,0.42)_86%,rgba(0,0,0,0.12)_94%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_66%,rgba(0,0,0,0.82)_76%,rgba(0,0,0,0.42)_86%,rgba(0,0,0,0.12)_94%,transparent_100%)]"
+                    />
+                    <img
+                      src={encodeURI("/Équipe Marin Academy.png")}
+                      alt=""
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 w-full h-full object-contain blur-sm opacity-45 select-none [mask-image:linear-gradient(to_bottom,transparent_64%,rgba(0,0,0,0.75)_82%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_64%,rgba(0,0,0,0.75)_82%,transparent_100%)]"
+                    />
+                    <div className="pointer-events-none absolute -bottom-2 inset-x-0 h-20 bg-gradient-to-t from-[#1d8ccc]/75 via-[#1d8ccc]/25 to-transparent blur-xl" />
+                  </div>
                 </div>
-
-                {/* Floating Stat Badge 1: Top Right (+15,000 طالب مشترك) */}
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2, duration: 0.6 }}
-                  className="absolute -top-3 sm:-top-5 -right-2 sm:-right-4 z-20 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-xl border border-slate-100/80 flex items-center gap-2.5"
-                >
-                  <div className="flex -space-x-2 overflow-hidden shrink-0">
-                    <span className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-[#041d37] flex items-center justify-center text-[10px] text-white font-bold">M</span>
-                    <span className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-[#1d8ccc] flex items-center justify-center text-[10px] text-white font-bold">A</span>
-                    <span className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-[#38bdf8] flex items-center justify-center text-[10px] text-[#041d37] font-bold">R</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs sm:text-sm font-black text-slate-900 leading-tight">+15,000</p>
-                    <p className="text-[10px] text-slate-500 font-semibold">{t("activeTrainees")}</p>
-                  </div>
-                </motion.div>
-
-                {/* Floating Stat Badge 2: Top Left (+1,500 فيديوهات مسجلة) */}
-                <motion.div
-                  initial={{ y: -20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.35, duration: 0.6 }}
-                  className="absolute top-12 sm:top-16 -left-3 sm:-left-6 z-20 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-xl border border-slate-100/80 flex items-center gap-2.5"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0062c4] flex items-center justify-center shadow-xs">
-                    <GraduationCap className="w-4 h-4" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs sm:text-sm font-black text-slate-900 leading-tight">+1,500</p>
-                    <p className="text-[10px] text-slate-500 font-semibold">{t("recordedLectures")}</p>
-                  </div>
-                </motion.div>
 
               </div>
             </div>
@@ -593,11 +568,15 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
               
               {/* Pillar 1: Vision */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 6 }}
+                whileInView={{ opacity: 1 }}
+                animate={{ y: [6, -12, 6] }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="group relative flex flex-col h-full transform hover:-translate-y-2.5 transition-all duration-500 drop-shadow-xl hover:drop-shadow-2xl"
+                transition={{
+                  opacity: { duration: 0.6 },
+                  y: { duration: 2.8, repeat: Infinity, ease: "easeInOut", delay: 0 }
+                }}
+                className="group relative flex flex-col h-full transition-[filter] duration-500 drop-shadow-xl hover:drop-shadow-2xl"
               >
                 {/* Top White Wave Cap for Card 1 */}
                 <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
@@ -658,11 +637,15 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
 
               {/* Pillar 2: Mission */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 6 }}
+                whileInView={{ opacity: 1 }}
+                animate={{ y: [6, -12, 6] }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="group relative flex flex-col h-full transform hover:-translate-y-2.5 transition-all duration-500 drop-shadow-xl hover:drop-shadow-2xl"
+                transition={{
+                  opacity: { duration: 0.6, delay: 0.1 },
+                  y: { duration: 2.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 }
+                }}
+                className="group relative flex flex-col h-full transition-[filter] duration-500 drop-shadow-xl hover:drop-shadow-2xl"
               >
                 {/* Top White Wave Cap for Card 2 */}
                 <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
@@ -723,11 +706,15 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
 
               {/* Pillar 3: Values */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 6 }}
+                whileInView={{ opacity: 1 }}
+                animate={{ y: [6, -12, 6] }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="group relative flex flex-col h-full transform hover:-translate-y-2.5 transition-all duration-500 drop-shadow-xl hover:drop-shadow-2xl"
+                transition={{
+                  opacity: { duration: 0.6, delay: 0.2 },
+                  y: { duration: 2.8, repeat: Infinity, ease: "easeInOut", delay: 0.8 }
+                }}
+                className="group relative flex flex-col h-full transition-[filter] duration-500 drop-shadow-xl hover:drop-shadow-2xl"
               >
                 {/* Top White Wave Cap for Card 3 */}
                 <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
