@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Facebook, Linkedin, Instagram, Mail, Phone, Copy, Check, MapPin } from "lucide-react";
+import { motion } from "motion/react";
 import { useLanguage } from "../context/LanguageContext";
 
 export const LandingFooter: React.FC<{ onOpenContact?: () => void; onOpenAbout?: () => void }> = () => {
@@ -43,20 +44,50 @@ export const LandingFooter: React.FC<{ onOpenContact?: () => void; onOpenAbout?:
           preserveAspectRatio="none"
         >
           {/* Layer 1: Background Soft Sky Blue Accent */}
-          <path
-            d="M0 180 C 300 175, 600 130, 900 70 C 1140 25, 1320 10, 1440 0 L 1440 200 L 0 200 Z"
+          <motion.path
+            initial={{
+              d: "M0 138 C 280 158, 560 72, 860 95 C 1120 112, 1300 24, 1440 12 L 1440 220 L 0 220 Z",
+            }}
+            animate={{
+              d: [
+                "M0 138 C 280 158, 560 72, 860 95 C 1120 112, 1300 24, 1440 12 L 1440 220 L 0 220 Z",
+                "M0 108 C 310 56, 600 148, 900 44 C 1140 8, 1310 68, 1440 34 L 1440 220 L 0 220 Z",
+                "M0 138 C 280 158, 560 72, 860 95 C 1120 112, 1300 24, 1440 12 L 1440 220 L 0 220 Z",
+              ],
+            }}
+            transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut", delay: 0 }}
             fill="#80cef8"
-            opacity="0.35"
+            opacity="0.45"
           />
           {/* Layer 2: Middle Vibrant Sky Blue Accent */}
-          <path
-            d="M0 165 C 280 168, 560 115, 860 60 C 1100 20, 1300 8, 1440 2 L 1440 200 L 0 200 Z"
+          <motion.path
+            initial={{
+              d: "M0 156 C 260 122, 540 162, 840 78 C 1100 18, 1290 64, 1440 26 L 1440 220 L 0 220 Z",
+            }}
+            animate={{
+              d: [
+                "M0 156 C 260 122, 540 162, 840 78 C 1100 18, 1290 64, 1440 26 L 1440 220 L 0 220 Z",
+                "M0 128 C 290 170, 580 76, 880 105 C 1130 125, 1310 22, 1440 44 L 1440 220 L 0 220 Z",
+                "M0 156 C 260 122, 540 162, 840 78 C 1100 18, 1290 64, 1440 26 L 1440 220 L 0 220 Z",
+              ],
+            }}
+            transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 0.45 }}
             fill="#45abdf"
-            opacity="0.55"
+            opacity="0.65"
           />
           {/* Layer 3: Main Wave Base in #1d8ccc */}
-          <path
-            d="M0 145 C 260 152, 540 98, 840 48 C 1080 12, 1280 5, 1440 4 L 1440 200 L 0 200 Z"
+          <motion.path
+            initial={{
+              d: "M0 172 C 270 178, 550 112, 850 124 C 1110 134, 1290 42, 1440 38 L 1440 220 L 0 220 Z",
+            }}
+            animate={{
+              d: [
+                "M0 172 C 270 178, 550 112, 850 124 C 1110 134, 1290 42, 1440 38 L 1440 220 L 0 220 Z",
+                "M0 148 C 300 106, 590 178, 890 76 C 1130 32, 1310 82, 1440 54 L 1440 220 L 0 220 Z",
+                "M0 172 C 270 178, 550 112, 850 124 C 1110 134, 1290 42, 1440 38 L 1440 220 L 0 220 Z",
+              ],
+            }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.9 }}
             fill="#1d8ccc"
           />
         </svg>
