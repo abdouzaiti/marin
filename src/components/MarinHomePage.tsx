@@ -82,23 +82,63 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
           >
-            <path
-              d="M-100 130 C 280 320, 680 40, 1540 220 L 1540 700 L -100 700 Z"
+            <motion.path
+              initial={{
+                d: "M-100 130 C 280 320, 680 40, 1540 220 L 1540 720 L -100 720 Z",
+              }}
+              animate={{
+                d: [
+                  "M-100 130 C 280 320, 680 40, 1540 220 L 1540 720 L -100 720 Z",
+                  "M-100 185 C 320 65, 720 290, 1540 155 L 1540 720 L -100 720 Z",
+                  "M-100 130 C 280 320, 680 40, 1540 220 L 1540 720 L -100 720 Z",
+                ],
+              }}
+              transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0 }}
               fill="url(#wave-gradient-1)"
               opacity="0.5"
             />
-            <path
-              d="M-100 260 C 380 70, 920 340, 1540 210 L 1540 700 L -100 700 Z"
+            <motion.path
+              initial={{
+                d: "M-100 260 C 380 70, 920 340, 1540 210 L 1540 720 L -100 720 Z",
+              }}
+              animate={{
+                d: [
+                  "M-100 260 C 380 70, 920 340, 1540 210 L 1540 720 L -100 720 Z",
+                  "M-100 210 C 360 320, 880 120, 1540 280 L 1540 720 L -100 720 Z",
+                  "M-100 260 C 380 70, 920 340, 1540 210 L 1540 720 L -100 720 Z",
+                ],
+              }}
+              transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
               fill="url(#wave-gradient-2)"
               opacity="0.4"
             />
-            <path
-              d="M-100 420 C 450 260, 850 510, 1540 360 L 1540 700 L -100 700 Z"
+            <motion.path
+              initial={{
+                d: "M-100 420 C 450 260, 850 510, 1540 360 L 1540 720 L -100 720 Z",
+              }}
+              animate={{
+                d: [
+                  "M-100 420 C 450 260, 850 510, 1540 360 L 1540 720 L -100 720 Z",
+                  "M-100 370 C 420 500, 880 250, 1540 420 L 1540 720 L -100 720 Z",
+                  "M-100 420 C 450 260, 850 510, 1540 360 L 1540 720 L -100 720 Z",
+                ],
+              }}
+              transition={{ duration: 4.4, repeat: Infinity, ease: "easeInOut", delay: 1.0 }}
               fill="url(#wave-gradient-3)"
               opacity="0.45"
             />
-            <path
-              d="M-100 550 C 350 420, 950 620, 1540 480 L 1540 700 L -100 700 Z"
+            <motion.path
+              initial={{
+                d: "M-100 550 C 350 420, 950 620, 1540 480 L 1540 720 L -100 720 Z",
+              }}
+              animate={{
+                d: [
+                  "M-100 550 C 350 420, 950 620, 1540 480 L 1540 720 L -100 720 Z",
+                  "M-100 500 C 380 610, 920 410, 1540 540 L 1540 720 L -100 720 Z",
+                  "M-100 550 C 350 420, 950 620, 1540 480 L 1540 720 L -100 720 Z",
+                ],
+              }}
+              transition={{ duration: 4.0, repeat: Infinity, ease: "easeInOut", delay: 1.4 }}
               fill="url(#wave-gradient-4)"
               opacity="0.3"
             />
@@ -199,14 +239,60 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
         </div>
 
         {/* Bottom Smooth Curved Wave Transition */}
-        <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none z-0 pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none z-0 pointer-events-none -mb-[1px]">
           <svg
-            className="relative block w-full h-10 sm:h-16 text-white"
+            className="relative block w-full h-14 sm:h-20 text-white"
             viewBox="0 0 1200 120"
             preserveAspectRatio="none"
-            fill="currentColor"
+            fill="none"
           >
-            <path d="M0,0 C150,90 350,-40 500,60 C650,160 900,10 1200,40 L1200,120 L0,120 Z" />
+            {/* Layer 1: Soft Translucent Back Wave */}
+            <motion.path
+              initial={{
+                d: "M0,38 C180,95 360,5 540,54 C720,104 940,12 1200,34 L1200,130 L0,130 Z",
+              }}
+              animate={{
+                d: [
+                  "M0,38 C180,95 360,5 540,54 C720,104 940,12 1200,34 L1200,130 L0,130 Z",
+                  "M0,18 C200,10 380,92 560,32 C760,2 960,88 1200,52 L1200,130 L0,130 Z",
+                  "M0,38 C180,95 360,5 540,54 C720,104 940,12 1200,34 L1200,130 L0,130 Z",
+                ],
+              }}
+              transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut", delay: 0 }}
+              fill="#ffffff"
+              opacity="0.25"
+            />
+            {/* Layer 2: Middle Translucent Wave */}
+            <motion.path
+              initial={{
+                d: "M0,52 C160,18 350,96 520,46 C710,8 920,86 1200,48 L1200,130 L0,130 Z",
+              }}
+              animate={{
+                d: [
+                  "M0,52 C160,18 350,96 520,46 C710,8 920,86 1200,48 L1200,130 L0,130 Z",
+                  "M0,32 C190,98 370,14 550,68 C740,108 950,16 1200,28 L1200,130 L0,130 Z",
+                  "M0,52 C160,18 350,96 520,46 C710,8 920,86 1200,48 L1200,130 L0,130 Z",
+                ],
+              }}
+              transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 0.45 }}
+              fill="#ffffff"
+              opacity="0.45"
+            />
+            {/* Layer 3: Main White Wave Base */}
+            <motion.path
+              initial={{
+                d: "M0,42 C150,98 350,8 520,62 C700,115 910,20 1200,46 L1200,130 L0,130 Z",
+              }}
+              animate={{
+                d: [
+                  "M0,42 C150,98 350,8 520,62 C700,115 910,20 1200,46 L1200,130 L0,130 Z",
+                  "M0,64 C180,18 380,104 560,42 C740,6 940,94 1200,62 L1200,130 L0,130 Z",
+                  "M0,42 C150,98 350,8 520,62 C700,115 910,20 1200,46 L1200,130 L0,130 Z",
+                ],
+              }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.9 }}
+              fill="currentColor"
+            />
           </svg>
         </div>
       </section>
