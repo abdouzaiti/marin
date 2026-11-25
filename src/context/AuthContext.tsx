@@ -123,6 +123,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [accessToken]
   );
 
+  const safeReadJson = async (res: Response): Promise<any | null> => {
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.toLowerCase().includes("application/json")) {
+      return null;
+    }
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
+  };
+
   const refreshSession = useCallback(async () => {
     try {
       const [statusRes, sessionRes] = await Promise.all([
@@ -131,24 +143,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ]);
 
       if (statusRes.ok) {
-        const statusData = await statusRes.json();
-        setSupabaseConfigured(Boolean(statusData.supabaseConfigured));
-        setBunnyConfigured(Boolean(statusData.bunnyConfigured));
+        const statusData = await safeReadJson(statusRes);
+        if (statusData) {
+          setSupabaseConfigured(Boolean(statusData.supabaseConfigured));
+          setBunnyConfigured(Boolean(statusData.bunnyConfigured));
+        }
       }
 
       if (sessionRes.ok) {
-        const data = await sessionRes.json();
-        setSupabaseConfigured((prev) => Boolean(data.supabaseConfigured ?? prev));
-        if (data.authenticated && data.user && data.profile) {
-          setAuthenticated(true);
-          setUser(data.user);
-          setProfile(data.profile);
-          setAccessToken(data.accessToken || null);
-        } else {
-          setAuthenticated(false);
-          setUser(null);
-          setProfile(GUEST_PROFILE);
-          setAccessToken(null);
+        const data = await safeReadJson(sessionRes);
+        if (data) {
+          setSupabaseConfigured((prev) => Boolean(data.supabaseConfigured ?? prev));
+          if (data.authenticated && data.user && data.profile) {
+            setAuthenticated(true);
+            setUser(data.user);
+            setProfile(data.profile);
+            setAccessToken(data.accessToken || null);
+          } else {
+            setAuthenticated(false);
+            setUser(null);
+            setProfile(GUEST_PROFILE);
+            setAccessToken(null);
+          }
         }
       }
     } catch (err) {
@@ -170,9 +186,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: authHeaders(null),
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        return { ok: false, error: data.error || "Erreur lors de l'inscription." };
+      const data = await safeReadJson(res);
+      if (!res.ok || !data) {
+        return {
+          ok: false,
+          error: data?.error || "Erreur serveur lors de l'inscription.",
+        };
       }
 
       if (data.needsEmailConfirmation) {
@@ -204,9 +223,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: authHeaders(null),
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        return { ok: false, error: data.error || "Identifiants invalides." };
+      const data = await safeReadJson(res);
+      if (!res.ok || !data) {
+        return {
+          ok: false,
+          error: data?.error || "Identifiants invalides ou serveur indisponible.",
+        };
       }
 
       if (data.user && data.profile) {
@@ -255,9 +277,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: authHeaders(),
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        return { ok: false, error: data.error || "Erreur lors de la mise à jour." };
+      const data = await safeReadJson(res);
+      if (!res.ok || !data) {
+        return { ok: false, error: data?.error || "Erreur lors de la mise à jour." };
       }
       if (data.profile) {
         setProfile(data.profile);
@@ -283,9 +305,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: authHeaders(),
         body: JSON.stringify({ requestedRole, requestNote, activeDomain }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        return { ok: false, error: data.error || "Erreur lors de la demande." };
+      const data = await safeReadJson(res);
+      if (!res.ok || !data) {
+        return { ok: false, error: data?.error || "Erreur lors de la demande." };
       }
       if (data.profile) {
         setProfile(data.profile);
@@ -320,8 +342,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ moduleId }),
       });
       if (res.ok) {
-        const data = await res.json();
-        if (data.profile) {
+        const data = await safeReadJson(res);
+        if (data?.profile) {
           setProfile(data.profile);
         }
       }
