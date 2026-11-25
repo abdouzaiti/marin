@@ -3,6 +3,9 @@ export interface VideoLesson {
   title: string;
   duration: string;
   videoUrl: string; // embed or placeholder
+  bunnyVideoId?: string;
+  embedUrl?: string;
+  hlsUrl?: string;
   transcript: string;
   chapters: { time: string; title: string }[];
 }
@@ -19,6 +22,7 @@ export interface VideoCourse {
   duration: string;
   description: string;
   rating: number;
+  isBunnyStream?: boolean;
   lessons: VideoLesson[];
 }
 

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Mail, Phone, MapPin, ExternalLink } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Mail, Phone, MapPin } from "lucide-react";
 import { YouTubeNavbar } from "./components/YouTubeNavbar";
 import { YouTubeBottomNav } from "./components/YouTubeBottomNav";
 import { MarinHomePage } from "./components/MarinHomePage";
@@ -9,40 +9,59 @@ import { YouTubeStudioModal } from "./components/YouTubeStudioModal";
 import { AiSimulationLab } from "./components/AiSimulationLab";
 import { CareerAdvisorView } from "./components/CareerAdvisorView";
 import { UserProfileView } from "./components/UserProfileView";
+import { DeveloperDashboard } from "./components/DeveloperDashboard";
 import { AuthPage } from "./components/AuthPage";
 import { VIDEO_COURSES, VideoCourse } from "./data/videoCourses";
-import { UserProfile } from "./types";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 function MainApp() {
-  const [activeTab, setActiveTab] = useState<string>("home"); // "home" | "watch" | "explore" | "simulations" | "career"
+  const [activeTab, setActiveTab] = useState<string>("home");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Tout");
   const [courses, setCourses] = useState<VideoCourse[]>(VIDEO_COURSES);
   const [selectedCourse, setSelectedCourse] = useState<VideoCourse | null>(VIDEO_COURSES[0]);
   const [studioOpen, setStudioOpen] = useState<boolean>(false);
   const { isRTL } = useLanguage();
+  const {
+    profile: userProfile,
+    setLocalProfile: setUserProfile,
+    completeModule,
+  } = useAuth();
 
-  const [userProfile, setUserProfile] = useState<UserProfile>({
-    name: "Alexandre Dupont",
-    email: "alexandre.dupont@marinacademy.pro",
-    title: "Apprenant Professionnel",
-    xp: 680,
-    streak: 6,
-    completedModules: ["vc-1-l1"],
-    enrolledPath: null,
-    activeDomain: "Comptabilité & Finance"
-  });
+  useEffect(() => {
+    let active = true;
+    const loadBunnyCourses = async () => {
+      try {
+        const res = await fetch("/api/bunny/videos", { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (
+          active &&
+          data.configured &&
+          Array.isArray(data.courses) &&
+          data.courses.length > 0
+        ) {
+          const bunnyCourses = data.courses as VideoCourse[];
+          setCourses((prev) => {
+            const bunnyIds = new Set(bunnyCourses.map((c) => c.id));
+            const remaining = prev.filter((c) => !bunnyIds.has(c.id));
+            return [...bunnyCourses, ...remaining];
+          });
+          setSelectedCourse((prev) =>
+            !prev || prev.id === VIDEO_COURSES[0]?.id ? bunnyCourses[0] : prev
+          );
+        }
+      } catch (err) {
+        console.error("Failed to load Bunny Stream courses:", err);
+      }
+    };
 
-  const completeModule = (id: string) => {
-    if (!userProfile.completedModules.includes(id)) {
-      setUserProfile((prev) => ({
-        ...prev,
-        xp: prev.xp + 100,
-        completedModules: [...prev.completedModules, id]
-      }));
-    }
-  };
+    loadBunnyCourses();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleSelectCourse = (course: VideoCourse) => {
     setSelectedCourse(course);
@@ -59,9 +78,12 @@ function MainApp() {
   const [aboutModalOpen, setAboutModalOpen] = useState<boolean>(false);
 
   return (
-    <div className={`relative min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white ${isRTL ? "text-right" : "text-left"}`}>
-      
-      {/* Floating Dark Pill Top Navbar / Hero Banner */}
+    <div
+      className={`relative min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white ${
+        isRTL ? "text-right" : "text-left"
+      }`}
+    >
+      {/* Floating Navbar */}
       <YouTubeNavbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -79,9 +101,12 @@ function MainApp() {
         }}
       />
 
-      <div className={`flex flex-1 w-full pb-14 md:pb-0 ${activeTab !== "home" ? "pt-16 sm:pt-18" : "pt-0"}`}>
-        
-        {/* Main Content Area - Full width */}
+      <div
+        className={`flex flex-1 w-full pb-14 md:pb-0 ${
+          activeTab !== "home" ? "pt-16 sm:pt-18" : "pt-0"
+        }`}
+      >
+        {/* Main Content Area */}
         <main className="flex-1 flex flex-col w-full">
           {activeTab === "home" && (
             <MarinHomePage
@@ -105,7 +130,9 @@ function MainApp() {
             />
           )}
 
-          {(activeTab === "academy" || activeTab === "courses" || activeTab === "explore") && (
+          {(activeTab === "academy" ||
+            activeTab === "courses" ||
+            activeTab === "explore") && (
             <YouTubeHomeFeed
               courses={courses}
               selectedCategory={selectedCategory}
@@ -154,19 +181,24 @@ function MainApp() {
             </div>
           )}
 
+          {activeTab === "developer" && (
+            <div className="flex-1 overflow-y-auto">
+              <DeveloperDashboard onBackToHome={() => setActiveTab("home")} />
+            </div>
+          )}
+
           {(activeTab === "login" || activeTab === "register") && (
             <div className="flex-1 overflow-y-auto">
               <AuthPage
                 initialMode={activeTab === "register" ? "register" : "login"}
                 userProfile={userProfile}
                 setUserProfile={setUserProfile}
-                onSuccess={() => setActiveTab("home")}
+                onSuccess={() => setActiveTab("profile")}
                 onBackToHome={() => setActiveTab("home")}
               />
             </div>
           )}
         </main>
-
       </div>
 
       {/* Bottom Navigation Bar for Mobile / Phone screens */}
@@ -177,7 +209,7 @@ function MainApp() {
         setSelectedCategory={setSelectedCategory}
       />
 
-      {/* Contact Us Modal (تواصل معنا) */}
+      {/* Contact Us Modal */}
       {contactModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-right animate-in fade-in zoom-in-95 duration-200">
@@ -227,7 +259,9 @@ function MainApp() {
                 >
                   <div className="flex flex-col text-right">
                     <span className="text-sm font-bold">حي زغلول، مستغانم</span>
-                    <span className="text-xs text-slate-500 font-normal">Cité Zaghloul, Mostaganem, Algérie</span>
+                    <span className="text-xs text-slate-500 font-normal">
+                      Cité Zaghloul, Mostaganem, Algérie
+                    </span>
                   </div>
                   <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <MapPin className="w-4 h-4" />
@@ -248,7 +282,7 @@ function MainApp() {
         </div>
       )}
 
-      {/* About Us Modal (من نحن) */}
+      {/* About Us Modal */}
       {aboutModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-right animate-in fade-in zoom-in-95 duration-200">
@@ -269,7 +303,7 @@ function MainApp() {
               <p className="text-slate-600">
                 نساعد رواد الأعمال، المدراء التنفيذيين والمهنيين على الانتقال من التسيير العشوائي إلى التحكم الكامل وبناء شركات رابحة ومستدامة بأحدث المعايير الدولية.
               </p>
-              
+
               <div className="pt-4">
                 <button
                   onClick={() => setAboutModalOpen(false)}
@@ -289,7 +323,6 @@ function MainApp() {
         onClose={() => setStudioOpen(false)}
         onCourseGenerated={handleCourseGenerated}
       />
-
     </div>
   );
 }
@@ -297,8 +330,9 @@ function MainApp() {
 export default function App() {
   return (
     <LanguageProvider>
-      <MainApp />
+      <AuthProvider>
+        <MainApp />
+      </AuthProvider>
     </LanguageProvider>
   );
 }
-

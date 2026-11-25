@@ -49,7 +49,17 @@ export interface CareerAdvice {
   interviewTips: string[];
 }
 
+export type UserRole = "guest" | "student" | "teacher" | "admin" | "developer";
+export type RegistrationRequestStatus = "none" | "pending" | "approved" | "rejected";
+
 export interface UserProfile {
+  id?: string;
+  username?: string;
+  role?: UserRole;
+  requestedRole?: UserRole | null;
+  requestStatus?: RegistrationRequestStatus;
+  requestNote?: string;
+  createdAt?: string;
   name: string;
   email: string;
   title: string;
@@ -58,4 +68,19 @@ export interface UserProfile {
   completedModules: string[];
   enrolledPath: TrainingPath | null;
   activeDomain: string | null;
+}
+
+export interface Classroom {
+  id: string;
+  title: string;
+  domain: string;
+  teacherId: string | null;
+  teacherName: string;
+  teacherEmail: string;
+  schedule: string;
+  capacity: number;
+  status: "active" | "draft" | "archived";
+  studentCount: number;
+  studentIds: string[];
+  createdAt: string;
 }

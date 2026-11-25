@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { DoorOpen } from "lucide-react";
+import { DoorOpen, LogOut, ShieldCheck } from "lucide-react";
 import { UserProfile } from "../types";
 import { useLanguage } from "../context/LanguageContext";
+import { useAuth } from "../context/AuthContext";
 
 interface YouTubeNavbarProps {
   activeTab: string;
@@ -20,6 +21,7 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const { authenticated, profile, logout, isDeveloper } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,10 +52,8 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between">
-        
-        {/* Right Side (in RTL): Logo + Navigation Menu Links */}
+        {/* Logo + Navigation Menu Links */}
         <div className="flex items-center gap-6 sm:gap-8">
-          {/* Brand Logo */}
           <div
             onClick={() => {
               setActiveTab("home");
@@ -70,7 +70,6 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
             />
           </div>
 
-          {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1.5">
             <button
               onClick={() => {
@@ -95,7 +94,9 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
                 scrollToTop();
               }}
               className={`text-xs sm:text-sm font-bold px-3.5 py-2 rounded-lg transition-all cursor-pointer ${
-                activeTab === "academy" || activeTab === "courses" || activeTab === "watch"
+                activeTab === "academy" ||
+                activeTab === "courses" ||
+                activeTab === "watch"
                   ? isTransparentHeader
                     ? "bg-white text-[#041d37] shadow-sm"
                     : "bg-[#1d8ccc] text-white shadow-xs"
@@ -104,8 +105,40 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
                     : "text-slate-700 hover:text-[#1d8ccc] hover:bg-slate-100"
               }`}
             >
-              {language === "fr" ? "Académie" : language === "en" ? "Academy" : "الأكاديمية"}
+              {language === "fr"
+                ? "Académie"
+                : language === "en"
+                  ? "Academy"
+                  : "الأكاديمية"}
             </button>
+
+            {isDeveloper && (
+              <button
+                onClick={() => {
+                  setActiveTab("developer");
+                  scrollToTop();
+                }}
+                className={`text-xs sm:text-sm font-bold px-3.5 py-2 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 ${
+                  activeTab === "developer"
+                    ? isTransparentHeader
+                      ? "bg-white text-[#041d37] shadow-sm"
+                      : "bg-[#041d37] text-white shadow-xs"
+                    : isTransparentHeader
+                      ? "text-white/95 hover:text-white hover:bg-white/20"
+                      : "text-[#041d37] hover:text-[#1d8ccc] hover:bg-sky-50"
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>
+                  {language === "fr"
+                    ? "Développeur"
+                    : language === "en"
+                      ? "Developer"
+                      : "لوحة المطور"}
+                </span>
+              </button>
+            )}
+
             {onOpenAbout && (
               <button
                 onClick={onOpenAbout}
@@ -115,7 +148,11 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
                     : "text-slate-700 hover:text-[#1d8ccc] hover:bg-slate-100"
                 }`}
               >
-                {language === "fr" ? "À propos" : language === "en" ? "About Us" : "من نحن"}
+                {language === "fr"
+                  ? "À propos"
+                  : language === "en"
+                    ? "About Us"
+                    : "من نحن"}
               </button>
             )}
             {onOpenContact && (
@@ -127,18 +164,23 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
                     : "text-slate-700 hover:text-[#1d8ccc] hover:bg-slate-100"
                 }`}
               >
-                {language === "fr" ? "Contact" : language === "en" ? "Contact Us" : "تواصل معنا"}
+                {language === "fr"
+                  ? "Contact"
+                  : language === "en"
+                    ? "Contact Us"
+                    : "تواصل معنا"}
               </button>
             )}
           </nav>
         </div>
 
-        {/* Left Side: Language Switcher & Action CTA Button */}
+        {/* Language Switcher & Auth / Profile Action */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Language Switcher (Visible on mobile & desktop) */}
-          <div className={`flex items-center gap-1 text-[11px] sm:text-xs font-bold ${
-            isTransparentHeader ? "text-white" : "text-slate-700"
-          }`}>
+          <div
+            className={`flex items-center gap-1 text-[11px] sm:text-xs font-bold ${
+              isTransparentHeader ? "text-white" : "text-slate-700"
+            }`}
+          >
             <button
               onClick={() => setLanguage("ar")}
               className={`px-2 py-1 rounded-full transition-all cursor-pointer ${
@@ -177,23 +219,69 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
             </button>
           </div>
 
-          <button
-            onClick={() => setActiveTab("register")}
-            className={`hidden sm:flex rounded-full font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 items-center gap-1.5 sm:gap-2 shadow-md active:scale-98 transition-all cursor-pointer ${
-              isTransparentHeader
-                ? "bg-[#041d37] hover:bg-[#072a4f] text-white shadow-black/20"
-                : "bg-[#1d8ccc] hover:bg-[#0062c4] text-white shadow-blue-900/20"
-            }`}
-          >
-            <span>{language === "fr" ? "Commencer" : language === "en" ? "Get Started" : "ابدأ الآن"}</span>
-            <DoorOpen className="w-4 h-4 text-white" />
-          </button>
+          {authenticated ? (
+            <div className="hidden sm:flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setActiveTab("profile");
+                  scrollToTop();
+                }}
+                className={`rounded-full font-bold text-xs sm:text-sm pl-2 pr-3.5 py-1.5 flex items-center gap-2 shadow-md transition-all cursor-pointer ${
+                  isTransparentHeader
+                    ? "bg-[#041d37] hover:bg-[#072a4f] text-white"
+                    : "bg-[#1d8ccc] hover:bg-[#0062c4] text-white"
+                }`}
+              >
+                <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-black">
+                  {profile.name.charAt(0).toUpperCase()}
+                </span>
+                <span className="max-w-[110px] truncate">{profile.name}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 uppercase">
+                  {profile.role || "guest"}
+                </span>
+              </button>
+              <button
+                onClick={async () => {
+                  await logout();
+                  setActiveTab("home");
+                }}
+                title={
+                  language === "ar"
+                    ? "تسجيل الخروج"
+                    : language === "en"
+                      ? "Sign Out"
+                      : "Déconnexion"
+                }
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                  isTransparentHeader
+                    ? "bg-white/15 hover:bg-white/25 text-white"
+                    : "bg-slate-100 hover:bg-slate-200 text-[#041d37]"
+                }`}
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setActiveTab("login")}
+              className={`hidden sm:flex rounded-full font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 items-center gap-1.5 sm:gap-2 shadow-md active:scale-98 transition-all cursor-pointer ${
+                isTransparentHeader
+                  ? "bg-[#041d37] hover:bg-[#072a4f] text-white shadow-black/20"
+                  : "bg-[#1d8ccc] hover:bg-[#0062c4] text-white shadow-blue-900/20"
+              }`}
+            >
+              <span>
+                {language === "fr"
+                  ? "Commencer"
+                  : language === "en"
+                    ? "Get Started"
+                    : "ابدأ الآن"}
+              </span>
+              <DoorOpen className="w-4 h-4 text-white" />
+            </button>
+          )}
         </div>
-
       </div>
     </header>
   );
 };
-
-
-
