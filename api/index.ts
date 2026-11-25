@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import express, { Request, Response, NextFunction } from "express";
 import crypto from "node:crypto";
 import { GoogleGenAI, Type } from "@google/genai";
-import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
 try {
@@ -56,17 +56,12 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   return cookies;
 }
 
-function setAuthCookies(res: Response, accessToken: string, refreshToken?: string) {
+function setAuthCookies(res: Response, accessToken: string) {
   const attrs = "HttpOnly; Secure; SameSite=None; Partitioned; Path=/";
-  const cookieList = [
-    `${ACCESS_COOKIE}=${encodeURIComponent(accessToken)}; Max-Age=3600; ${attrs}`,
-  ];
-  if (refreshToken) {
-    cookieList.push(
-      `${REFRESH_COOKIE}=${encodeURIComponent(refreshToken)}; Max-Age=2592000; ${attrs}`
-    );
-  }
-  res.setHeader("Set-Cookie", cookieList);
+  res.setHeader("Set-Cookie", [
+    `${ACCESS_COOKIE}=${encodeURIComponent(accessToken)}; Max-Age=2592000; ${attrs}`,
+    `${REFRESH_COOKIE}=; Max-Age=0; ${attrs}`,
+  ]);
 }
 
 function clearAuthCookies(res: Response) {
@@ -177,23 +172,22 @@ function isSupabaseConfigured(): boolean {
   return Boolean(url && anonKey);
 }
 
-function createSupabaseAnonClient(accessToken?: string): SupabaseClient {
+function createSupabaseAnonClient(): SupabaseClient {
   const { url, anonKey } = getSupabaseConfig();
   return createClient(url, anonKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
     },
-    ...(accessToken
-      ? {
-          global: {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          },
-        }
-      : {}),
   });
+}
+
+function generateSessionToken(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function hashSessionToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
 }
 
 type ValidRole = "guest" | "student" | "teacher" | "admin" | "developer";
@@ -224,9 +218,6 @@ interface DbProfileRow {
   request_note?: string | null;
   created_at?: string | null;
 }
-
-const PROFILE_SELECT_FIELDS =
-  "id, email, username, full_name, title, active_domain, xp, streak, completed_modules, role, requested_role, request_status, request_note, created_at";
 
 function normalizeRole(role?: string | null): ValidRole {
   if (role && VALID_ROLES.includes(role as ValidRole)) {
@@ -262,102 +253,53 @@ function mapDbRowToProfile(row: DbProfileRow) {
   };
 }
 
-function mapDbProfileToClient(row: DbProfileRow | null, user: User) {
-  const fallbackName =
-    (user.user_metadata?.full_name as string) ||
-    user.email?.split("@")[0] ||
-    "Apprenant MARIN";
-  if (!row) {
-    const reqRole = user.user_metadata?.requested_role as string | undefined;
+function mapRpcError(rawMessage?: string): { status: number; message: string } {
+  const msg = rawMessage || "Erreur base de données.";
+  if (msg.includes("Could not find the function public.marin_")) {
     return {
-      id: user.id,
-      email: user.email || "",
-      username: (user.user_metadata?.username as string) || undefined,
-      name: fallbackName,
-      title: "Apprenant Professionnel",
-      activeDomain: (user.user_metadata?.active_domain as string) || "المالية الذكية",
-      xp: 0,
-      streak: 1,
-      completedModules: [] as string[],
-      enrolledPath: null,
-      role: "guest" as ValidRole,
-      requestedRole:
-        reqRole && VALID_APPLICANT_ROLES.includes(reqRole as "student" | "teacher")
-          ? (reqRole as ValidRole)
-          : ("student" as ValidRole),
-      requestStatus: "pending" as ValidRequestStatus,
-      requestNote: (user.user_metadata?.request_note as string) || "",
+      status: 503,
+      message:
+        "Veuillez exécuter le script SQL mis à jour (supabase/schema.sql) dans Supabase SQL Editor.",
     };
   }
-  return mapDbRowToProfile(row);
-}
-
-async function ensureProfileRow(
-  client: SupabaseClient,
-  user: User,
-  overrides?: {
-    fullName?: string;
-    username?: string;
-    requestedRole?: "student" | "teacher";
-    requestNote?: string;
-    activeDomain?: string;
+  if (msg.includes("EMAIL_EXISTS")) {
+    return { status: 409, message: "Un compte avec cette adresse email existe déjà." };
   }
-): Promise<DbProfileRow | null> {
-  const { data: existing, error: selectErr } = await client
-    .from("profiles")
-    .select(PROFILE_SELECT_FIELDS)
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!selectErr && existing) {
-    return existing as DbProfileRow;
+  if (msg.includes("USERNAME_EXISTS")) {
+    return {
+      status: 409,
+      message: "Ce nom d'utilisateur est déjà utilisé. Veuillez en choisir un autre.",
+    };
   }
-
-  const fullName =
-    overrides?.fullName ||
-    (user.user_metadata?.full_name as string) ||
-    user.email?.split("@")[0] ||
-    "Apprenant MARIN";
-  const username =
-    overrides?.username ||
-    (user.user_metadata?.username as string) ||
-    null;
-  const rawRequested =
-    overrides?.requestedRole || (user.user_metadata?.requested_role as string);
-  const requestedRole = VALID_APPLICANT_ROLES.includes(rawRequested as "student" | "teacher")
-    ? rawRequested
-    : "student";
-
-  const { data: inserted, error: insertErr } = await client
-    .from("profiles")
-    .upsert(
-      {
-        id: user.id,
-        email: user.email || "",
-        full_name: fullName,
-        username: username || null,
-        active_domain:
-          overrides?.activeDomain ||
-          (user.user_metadata?.active_domain as string) ||
-          "المالية الذكية",
-        role: "guest",
-        requested_role: requestedRole,
-        request_status: "pending",
-        request_note:
-          overrides?.requestNote ||
-          (user.user_metadata?.request_note as string) ||
-          "",
-      },
-      { onConflict: "id" }
-    )
-    .select(PROFILE_SELECT_FIELDS)
-    .single();
-
-  if (insertErr) {
-    console.warn("Unable to upsert profile row:", insertErr.message);
-    return null;
+  if (msg.includes("INVALID_CREDENTIALS")) {
+    return { status: 401, message: "Email, nom d'utilisateur ou mot de passe incorrect." };
   }
-  return inserted as DbProfileRow;
+  if (msg.includes("PASSWORD_NOT_SET")) {
+    return {
+      status: 401,
+      message:
+        "Ce profil n'a pas encore de mot de passe enregistré dans la table profiles.",
+    };
+  }
+  if (msg.includes("UNAUTHORIZED")) {
+    return { status: 401, message: "Session invalide ou expirée." };
+  }
+  if (msg.includes("FORBIDDEN")) {
+    return { status: 403, message: "Accès réservé exclusivement au rôle Développeur." };
+  }
+  if (msg.includes("CANNOT_DEMOTE_SELF")) {
+    return {
+      status: 400,
+      message: "Vous ne pouvez pas retirer votre propre rôle Développeur.",
+    };
+  }
+  if (msg.includes("ALREADY_ASSIGNED_ROLE")) {
+    return { status: 400, message: "Votre compte possède déjà un rôle attribué." };
+  }
+  if (msg.includes("USER_NOT_FOUND")) {
+    return { status: 404, message: "Utilisateur introuvable." };
+  }
+  return { status: 400, message: msg };
 }
 
 function extractAccessToken(req: Request): string | null {
@@ -371,9 +313,9 @@ function extractAccessToken(req: Request): string | null {
 }
 
 interface AuthedRequest extends Request {
-  authUser?: User;
   accessToken?: string;
-  userSupabase?: SupabaseClient;
+  tokenHash?: string;
+  supabaseClient?: SupabaseClient;
   callerProfile?: DbProfileRow;
 }
 
@@ -391,35 +333,38 @@ async function requireSupabaseAuth(req: AuthedRequest, res: Response, next: Next
   }
 
   try {
-    const supabase = createSupabaseAnonClient(token);
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data.user) {
+    const tokenHash = hashSessionToken(token);
+    const supabase = createSupabaseAnonClient();
+    const { data, error } = await supabase.rpc("marin_get_session", {
+      p_token_hash: tokenHash,
+    });
+
+    if (error) {
+      const mapped = mapRpcError(error.message);
+      return res.status(mapped.status).json({ error: mapped.message });
+    }
+    if (!data) {
       return res.status(401).json({ error: "Invalid or expired session" });
     }
-    req.authUser = data.user;
+
     req.accessToken = token;
-    req.userSupabase = supabase;
+    req.tokenHash = tokenHash;
+    req.supabaseClient = supabase;
+    req.callerProfile = data as DbProfileRow;
     next();
   } catch (err) {
-    console.error("Supabase auth verification error:", err);
+    console.error("Session verification error:", err);
     return res.status(500).json({ error: "Authentication verification failed" });
   }
 }
 
 async function requireDeveloperAuth(req: AuthedRequest, res: Response, next: NextFunction) {
-  try {
-    const profileRow = await ensureProfileRow(req.userSupabase!, req.authUser!);
-    if (!profileRow || normalizeRole(profileRow.role) !== "developer") {
-      return res.status(403).json({
-        error: "Accès réservé exclusivement au rôle Développeur.",
-      });
-    }
-    req.callerProfile = profileRow;
-    next();
-  } catch (err) {
-    console.error("Developer role verification error:", err);
-    return res.status(500).json({ error: "Erreur de vérification des droits." });
+  if (!req.callerProfile || normalizeRole(req.callerProfile.role) !== "developer") {
+    return res.status(403).json({
+      error: "Accès réservé exclusivement au rôle Développeur.",
+    });
   }
+  next();
 }
 
 // ============================================================================
@@ -509,7 +454,7 @@ app.get("/api/auth/status", (_req, res) => {
 });
 
 // ============================================================================
-// Supabase Auth & Profile Routes
+// Profiles-Table Auth & Profile Routes (No Supabase Auth Required)
 // ============================================================================
 
 app.post("/api/auth/register", requireCsrfSafe, async (req: Request, res: Response) => {
@@ -572,82 +517,37 @@ app.post("/api/auth/register", requireCsrfSafe, async (req: Request, res: Respon
       return res.status(400).json({ error: "Nom et prénom requis." });
     }
 
+    const sessionToken = generateSessionToken();
+    const tokenHash = hashSessionToken(sessionToken);
     const supabase = createSupabaseAnonClient();
 
-    const { data: existingUsernameEmail } = await supabase.rpc(
-      "get_email_by_username",
-      { p_username: cleanUsername }
-    );
-    if (existingUsernameEmail && typeof existingUsernameEmail === "string") {
-      return res.status(409).json({
-        error: "Ce nom d'utilisateur est déjà utilisé. Veuillez en choisir un autre.",
-      });
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          username: cleanUsername,
-          requested_role: cleanRequestedRole,
-          request_note: cleanNote,
-          active_domain: cleanDomain,
-        },
-      },
+    const { data, error } = await supabase.rpc("marin_register_profile", {
+      p_email: cleanEmail,
+      p_password: password,
+      p_full_name: fullName,
+      p_username: cleanUsername,
+      p_requested_role: cleanRequestedRole,
+      p_request_note: cleanNote,
+      p_active_domain: cleanDomain,
+      p_token_hash: tokenHash,
     });
 
-    if (error) {
-      const msg = error.message || "Erreur lors de l'inscription.";
-      if (msg.toLowerCase().includes("rate limit")) {
-        return res.status(429).json({
-          error:
-            "Limite d'envoi d'emails Supabase atteinte. Désactivez 'Confirm email' dans Supabase Dashboard → Authentication → Providers → Email pour tester plusieurs comptes librement.",
-        });
-      }
-      return res.status(400).json({ error: msg });
+    if (error || !data) {
+      const mapped = mapRpcError(error?.message);
+      return res.status(mapped.status).json({ error: mapped.message });
     }
 
-    if (!data.user) {
-      return res.status(400).json({ error: "Impossible de créer le compte." });
-    }
-
-    if (Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-      return res
-        .status(409)
-        .json({ error: "Un compte avec cette adresse email existe déjà." });
-    }
-
-    if (data.session) {
-      const userClient = createSupabaseAnonClient(data.session.access_token);
-      const profileRow = await ensureProfileRow(userClient, data.user, {
-        fullName,
-        username: cleanUsername,
-        requestedRole: cleanRequestedRole,
-        requestNote: cleanNote,
-        activeDomain: cleanDomain,
-      });
-      setAuthCookies(res, data.session.access_token, data.session.refresh_token);
-      return res.status(201).json({
-        user: {
-          id: data.user.id,
-          email: data.user.email,
-        },
-        profile: mapDbProfileToClient(profileRow, data.user),
-        accessToken: data.session.access_token,
-        needsEmailConfirmation: false,
-      });
-    }
+    const profileRow = data as DbProfileRow;
+    setAuthCookies(res, sessionToken);
 
     return res.status(201).json({
       user: {
-        id: data.user.id,
-        email: data.user.email,
+        id: profileRow.id,
+        email: profileRow.email,
       },
-      profile: mapDbProfileToClient(null, data.user),
-      accessToken: null,
-      needsEmailConfirmation: true,
+      profile: mapDbRowToProfile(profileRow),
+      accessToken: sessionToken,
+      needsEmailConfirmation: false,
     });
   } catch (err) {
     console.error("Registration error:", err);
@@ -674,49 +574,31 @@ app.post("/api/auth/login", requireCsrfSafe, async (req: Request, res: Response)
       return res.status(400).json({ error: "Identifiants requis." });
     }
 
+    const sessionToken = generateSessionToken();
+    const tokenHash = hashSessionToken(sessionToken);
     const supabase = createSupabaseAnonClient();
-    let loginEmail = cleanIdentifier.toLowerCase();
 
-    if (!cleanIdentifier.includes("@")) {
-      const { data: resolvedEmail, error: rpcError } = await supabase.rpc(
-        "get_email_by_username",
-        { p_username: cleanIdentifier }
-      );
-      if (rpcError || !resolvedEmail || typeof resolvedEmail !== "string") {
-        return res.status(401).json({ error: "Identifiants incorrects." });
-      }
-      loginEmail = resolvedEmail.toLowerCase();
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password,
+    const { data, error } = await supabase.rpc("marin_login_profile", {
+      p_identifier: cleanIdentifier,
+      p_password: password,
+      p_token_hash: tokenHash,
     });
 
-    if (error || !data.session || !data.user) {
-      const errMsg = error?.message || "Email ou mot de passe incorrect.";
-      if (errMsg.toLowerCase().includes("email not confirmed")) {
-        return res.status(401).json({
-          error:
-            "Email non confirmé. Vérifiez votre boîte mail ou désactivez 'Confirm email' dans Supabase → Authentication → Providers → Email.",
-        });
-      }
-      return res.status(401).json({
-        error: errMsg,
-      });
+    if (error || !data) {
+      const mapped = mapRpcError(error?.message);
+      return res.status(mapped.status).json({ error: mapped.message });
     }
 
-    const userClient = createSupabaseAnonClient(data.session.access_token);
-    const profileRow = await ensureProfileRow(userClient, data.user);
-    setAuthCookies(res, data.session.access_token, data.session.refresh_token);
+    const profileRow = data as DbProfileRow;
+    setAuthCookies(res, sessionToken);
 
     return res.json({
       user: {
-        id: data.user.id,
-        email: data.user.email,
+        id: profileRow.id,
+        email: profileRow.email,
       },
-      profile: mapDbProfileToClient(profileRow, data.user),
-      accessToken: data.session.access_token,
+      profile: mapDbRowToProfile(profileRow),
+      accessToken: sessionToken,
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -724,7 +606,18 @@ app.post("/api/auth/login", requireCsrfSafe, async (req: Request, res: Response)
   }
 });
 
-app.post("/api/auth/logout", requireCsrfSafe, (_req: Request, res: Response) => {
+app.post("/api/auth/logout", requireCsrfSafe, async (req: Request, res: Response) => {
+  const token = extractAccessToken(req);
+  if (token && isSupabaseConfigured()) {
+    try {
+      const supabase = createSupabaseAnonClient();
+      await supabase.rpc("marin_logout_session", {
+        p_token_hash: hashSessionToken(token),
+      });
+    } catch (err) {
+      console.error("Logout session revoke error:", err);
+    }
+  }
   clearAuthCookies(res);
   res.json({ ok: true });
 });
@@ -741,40 +634,19 @@ app.get("/api/auth/session", async (req: Request, res: Response) => {
   }
 
   try {
-    const cookies = parseCookies(req.headers.cookie);
-    let accessToken = extractAccessToken(req);
-    const refreshToken = cookies[REFRESH_COOKIE];
-
+    const accessToken = extractAccessToken(req);
     if (accessToken) {
-      const supabase = createSupabaseAnonClient(accessToken);
-      const { data, error } = await supabase.auth.getUser(accessToken);
-      if (!error && data.user) {
-        const profileRow = await ensureProfileRow(supabase, data.user);
-        return res.json({
-          authenticated: true,
-          supabaseConfigured: true,
-          user: { id: data.user.id, email: data.user.email },
-          profile: mapDbProfileToClient(profileRow, data.user),
-          accessToken,
-        });
-      }
-    }
-
-    if (refreshToken) {
       const supabase = createSupabaseAnonClient();
-      const { data, error } = await supabase.auth.refreshSession({
-        refresh_token: refreshToken,
+      const { data, error } = await supabase.rpc("marin_get_session", {
+        p_token_hash: hashSessionToken(accessToken),
       });
-      if (!error && data.session && data.user) {
-        accessToken = data.session.access_token;
-        setAuthCookies(res, data.session.access_token, data.session.refresh_token);
-        const userClient = createSupabaseAnonClient(accessToken);
-        const profileRow = await ensureProfileRow(userClient, data.user);
+      if (!error && data) {
+        const profileRow = data as DbProfileRow;
         return res.json({
           authenticated: true,
           supabaseConfigured: true,
-          user: { id: data.user.id, email: data.user.email },
-          profile: mapDbProfileToClient(profileRow, data.user),
+          user: { id: profileRow.id, email: profileRow.email },
+          profile: mapDbRowToProfile(profileRow),
           accessToken,
         });
       }
@@ -800,15 +672,9 @@ app.get("/api/auth/session", async (req: Request, res: Response) => {
 });
 
 app.get("/api/profile", requireSupabaseAuth, async (req: AuthedRequest, res: Response) => {
-  try {
-    const profileRow = await ensureProfileRow(req.userSupabase!, req.authUser!);
-    res.json({
-      profile: mapDbProfileToClient(profileRow, req.authUser!),
-    });
-  } catch (err) {
-    console.error("Fetch profile error:", err);
-    res.status(500).json({ error: "Impossible de charger le profil." });
-  }
+  res.json({
+    profile: mapDbRowToProfile(req.callerProfile!),
+  });
 });
 
 app.put(
@@ -819,55 +685,54 @@ app.put(
     try {
       const { name, title, activeDomain, username } = req.body || {};
 
-      const updates: Record<string, string | null> = {
-        updated_at: new Date().toISOString(),
-      };
-
+      let cleanName: string | null = null;
       if (typeof name === "string") {
-        const cleanName = name.trim();
+        cleanName = name.trim();
         if (cleanName.length < 1 || cleanName.length > 100) {
           return res.status(400).json({ error: "Nom invalide." });
         }
-        updates.full_name = cleanName;
       }
 
+      let cleanTitle: string | null = null;
       if (typeof title === "string") {
-        const cleanTitle = title.trim();
+        cleanTitle = title.trim();
         if (cleanTitle.length > 120) {
           return res.status(400).json({ error: "Titre trop long." });
         }
-        updates.title = cleanTitle || "Apprenant Professionnel";
+        cleanTitle = cleanTitle || "Apprenant Professionnel";
       }
 
+      let cleanDomain: string | null = null;
       if (typeof activeDomain === "string") {
-        const cleanDomain = activeDomain.trim();
+        cleanDomain = activeDomain.trim();
         if (cleanDomain.length > 120) {
           return res.status(400).json({ error: "Domaine invalide." });
         }
-        updates.active_domain = cleanDomain || null;
       }
 
+      let cleanUsername: string | null = null;
       if (typeof username === "string" && username.trim().length > 0) {
-        const cleanUsername = username.trim();
+        cleanUsername = username.trim();
         if (!VALID_USERNAME_REGEX.test(cleanUsername)) {
           return res.status(400).json({ error: "Nom d'utilisateur invalide." });
         }
-        updates.username = cleanUsername;
       }
 
-      const { data, error } = await req.userSupabase!
-        .from("profiles")
-        .update(updates)
-        .eq("id", req.authUser!.id)
-        .select(PROFILE_SELECT_FIELDS)
-        .single();
+      const { data, error } = await req.supabaseClient!.rpc("marin_update_profile", {
+        p_token_hash: req.tokenHash!,
+        p_full_name: cleanName,
+        p_title: cleanTitle,
+        p_active_domain: cleanDomain,
+        p_username: cleanUsername,
+      });
 
-      if (error) {
-        return res.status(400).json({ error: error.message });
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
       }
 
       return res.json({
-        profile: mapDbProfileToClient(data as DbProfileRow, req.authUser!),
+        profile: mapDbRowToProfile(data as DbProfileRow),
       });
     } catch (err) {
       console.error("Update profile error:", err);
@@ -889,38 +754,27 @@ app.post(
         });
       }
 
-      const existing = await ensureProfileRow(req.userSupabase!, req.authUser!);
-      if (existing && normalizeRole(existing.role) !== "guest") {
-        return res.status(400).json({
-          error: "Votre compte possède déjà un rôle attribué.",
-        });
-      }
-
       const cleanNote =
         typeof requestNote === "string" ? requestNote.trim().slice(0, 300) : "";
-      const updates: Record<string, string> = {
-        requested_role: requestedRole,
-        request_status: "pending",
-        request_note: cleanNote,
-        updated_at: new Date().toISOString(),
-      };
-      if (typeof activeDomain === "string" && activeDomain.trim()) {
-        updates.active_domain = activeDomain.trim().slice(0, 120);
-      }
+      const cleanDomain =
+        typeof activeDomain === "string" && activeDomain.trim()
+          ? activeDomain.trim().slice(0, 120)
+          : null;
 
-      const { data, error } = await req.userSupabase!
-        .from("profiles")
-        .update(updates)
-        .eq("id", req.authUser!.id)
-        .select(PROFILE_SELECT_FIELDS)
-        .single();
+      const { data, error } = await req.supabaseClient!.rpc("marin_request_role", {
+        p_token_hash: req.tokenHash!,
+        p_requested_role: requestedRole,
+        p_request_note: cleanNote,
+        p_active_domain: cleanDomain,
+      });
 
-      if (error) {
-        return res.status(400).json({ error: error.message });
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
       }
 
       return res.json({
-        profile: mapDbProfileToClient(data as DbProfileRow, req.authUser!),
+        profile: mapDbRowToProfile(data as DbProfileRow),
       });
     } catch (err) {
       console.error("Role request error:", err);
@@ -940,39 +794,18 @@ app.post(
         return res.status(400).json({ error: "Identifiant de module invalide." });
       }
 
-      const cleanModuleId = moduleId.trim();
-      const existing = await ensureProfileRow(req.userSupabase!, req.authUser!);
-      const currentModules = Array.isArray(existing?.completed_modules)
-        ? existing.completed_modules
-        : [];
-      const currentXp = typeof existing?.xp === "number" ? existing.xp : 0;
+      const { data, error } = await req.supabaseClient!.rpc("marin_complete_module", {
+        p_token_hash: req.tokenHash!,
+        p_module_id: moduleId.trim(),
+      });
 
-      if (currentModules.includes(cleanModuleId)) {
-        return res.json({
-          profile: mapDbProfileToClient(existing, req.authUser!),
-        });
-      }
-
-      const updatedModules = [...currentModules, cleanModuleId];
-      const updatedXp = currentXp + 100;
-
-      const { data, error } = await req.userSupabase!
-        .from("profiles")
-        .update({
-          completed_modules: updatedModules,
-          xp: updatedXp,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", req.authUser!.id)
-        .select(PROFILE_SELECT_FIELDS)
-        .single();
-
-      if (error) {
-        return res.status(400).json({ error: error.message });
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
       }
 
       return res.json({
-        profile: mapDbProfileToClient(data as DbProfileRow, req.authUser!),
+        profile: mapDbRowToProfile(data as DbProfileRow),
       });
     } catch (err) {
       console.error("Complete module error:", err);
@@ -982,7 +815,7 @@ app.post(
 );
 
 // ============================================================================
-// Developer Dashboard & Role Management Routes (No Service Role Key Required)
+// Developer Dashboard & Role Management Routes (Direct Profiles Table RPCs)
 // ============================================================================
 
 app.get(
@@ -991,36 +824,35 @@ app.get(
   requireDeveloperAuth,
   async (req: AuthedRequest, res: Response) => {
     try {
-      const [profilesRes, classesRes, enrollmentsRes] = await Promise.all([
-        req.userSupabase!
-          .from("profiles")
-          .select(PROFILE_SELECT_FIELDS)
-          .order("created_at", { ascending: false }),
-        req.userSupabase!
-          .from("classes")
-          .select("id, title, domain, teacher_id, schedule, capacity, status, created_at")
-          .order("created_at", { ascending: false }),
-        req.userSupabase!
-          .from("class_enrollments")
-          .select("class_id, student_id"),
-      ]);
+      const { data, error } = await req.supabaseClient!.rpc("marin_dev_dashboard", {
+        p_token_hash: req.tokenHash!,
+      });
 
-      if (profilesRes.error) {
-        return res.status(400).json({ error: profilesRes.error.message });
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
       }
 
-      const allProfiles = ((profilesRes.data || []) as DbProfileRow[]).map(mapDbRowToProfile);
+      const payload = data as {
+        profiles?: DbProfileRow[];
+        classes?: any[];
+        enrollments?: { class_id: string; student_id: string }[];
+      };
+
+      const allProfiles = (Array.isArray(payload.profiles) ? payload.profiles : []).map(
+        mapDbRowToProfile
+      );
       const profileById = new Map(allProfiles.map((p) => [p.id, p]));
 
-      const enrollments = Array.isArray(enrollmentsRes.data) ? enrollmentsRes.data : [];
+      const enrollments = Array.isArray(payload.enrollments) ? payload.enrollments : [];
       const enrollmentsByClass = new Map<string, string[]>();
-      for (const row of enrollments as { class_id: string; student_id: string }[]) {
+      for (const row of enrollments) {
         const list = enrollmentsByClass.get(row.class_id) || [];
         list.push(row.student_id);
         enrollmentsByClass.set(row.class_id, list);
       }
 
-      const rawClasses = Array.isArray(classesRes.data) ? classesRes.data : [];
+      const rawClasses = Array.isArray(payload.classes) ? payload.classes : [];
       const classes = rawClasses.map((cls: any) => {
         const teacher = cls.teacher_id ? profileById.get(cls.teacher_id) : undefined;
         const studentIds = enrollmentsByClass.get(cls.id) || [];
@@ -1056,7 +888,7 @@ app.get(
         staff,
         allUsers: allProfiles,
         classes,
-        classesTableReady: !classesRes.error,
+        classesTableReady: true,
       });
     } catch (err) {
       console.error("Developer dashboard load error:", err);
@@ -1098,15 +930,7 @@ app.post(
         typeof username === "string" && username.trim() ? username.trim() : null;
       const targetRole: ValidRole = VALID_ROLES.includes(role) ? role : "student";
       const cleanTitle =
-        typeof title === "string" && title.trim()
-          ? title.trim().slice(0, 120)
-          : targetRole === "teacher"
-            ? "Formateur Expert"
-            : targetRole === "admin"
-              ? "Administrateur"
-              : targetRole === "developer"
-                ? "Développeur Plateforme"
-                : "Apprenant Professionnel";
+        typeof title === "string" && title.trim() ? title.trim().slice(0, 120) : null;
       const cleanDomain =
         typeof activeDomain === "string" && activeDomain.trim()
           ? activeDomain.trim().slice(0, 120)
@@ -1127,61 +951,24 @@ app.post(
         });
       }
 
-      const anonClient = createSupabaseAnonClient();
-      const { data: signUpData, error: signUpErr } = await anonClient.auth.signUp({
-        email: cleanEmail,
-        password,
-        options: {
-          data: {
-            full_name: cleanFullName,
-            username: cleanUsername || undefined,
-            requested_role: targetRole === "teacher" ? "teacher" : "student",
-            active_domain: cleanDomain,
-          },
-        },
+      const { data, error } = await req.supabaseClient!.rpc("marin_dev_create_user", {
+        p_token_hash: req.tokenHash!,
+        p_email: cleanEmail,
+        p_password: password,
+        p_full_name: cleanFullName,
+        p_username: cleanUsername,
+        p_role: targetRole,
+        p_title: cleanTitle,
+        p_active_domain: cleanDomain,
       });
 
-      if (signUpErr) {
-        return res.status(400).json({ error: signUpErr.message });
-      }
-      if (!signUpData.user) {
-        return res.status(400).json({ error: "Impossible de créer l'utilisateur." });
-      }
-      if (
-        Array.isArray(signUpData.user.identities) &&
-        signUpData.user.identities.length === 0
-      ) {
-        return res
-          .status(409)
-          .json({ error: "Un utilisateur avec cette adresse email existe déjà." });
-      }
-
-      const { data: updatedProfile, error: upsertErr } = await req.userSupabase!
-        .from("profiles")
-        .upsert(
-          {
-            id: signUpData.user.id,
-            email: cleanEmail,
-            username: cleanUsername,
-            full_name: cleanFullName,
-            title: cleanTitle,
-            active_domain: cleanDomain,
-            role: targetRole,
-            requested_role: targetRole === "guest" ? "student" : targetRole,
-            request_status: targetRole === "guest" ? "pending" : "approved",
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "id" }
-        )
-        .select(PROFILE_SELECT_FIELDS)
-        .single();
-
-      if (upsertErr) {
-        return res.status(400).json({ error: upsertErr.message });
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
       }
 
       return res.status(201).json({
-        user: mapDbRowToProfile(updatedProfile as DbProfileRow),
+        user: mapDbRowToProfile(data as DbProfileRow),
       });
     } catch (err) {
       console.error("Developer create user error:", err);
@@ -1207,31 +994,20 @@ app.patch(
         return res.status(400).json({ error: "Rôle sélectionné invalide." });
       }
 
-      if (userId === req.authUser!.id && role !== "developer") {
-        return res.status(400).json({
-          error: "Vous ne pouvez pas retirer votre propre rôle Développeur.",
-        });
-      }
-
-      const nextStatus: ValidRequestStatus = VALID_REQUEST_STATUSES.includes(requestStatus)
+      const nextStatus: string | null = VALID_REQUEST_STATUSES.includes(requestStatus)
         ? requestStatus
-        : role === "guest"
-          ? "rejected"
-          : "approved";
+        : null;
 
-      const { data, error } = await req.userSupabase!
-        .from("profiles")
-        .update({
-          role,
-          request_status: nextStatus,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", userId)
-        .select(PROFILE_SELECT_FIELDS)
-        .single();
+      const { data, error } = await req.supabaseClient!.rpc("marin_dev_set_user_role", {
+        p_token_hash: req.tokenHash!,
+        p_target_user_id: userId,
+        p_role: role,
+        p_request_status: nextStatus,
+      });
 
-      if (error) {
-        return res.status(400).json({ error: error.message });
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
       }
 
       return res.json({
@@ -1272,21 +1048,19 @@ app.post(
       const cleanStatus =
         status === "draft" || status === "archived" ? status : "active";
 
-      const { data, error } = await req.userSupabase!
-        .from("classes")
-        .insert({
-          title: title.trim(),
-          domain: cleanDomain,
-          teacher_id: cleanTeacherId,
-          schedule: cleanSchedule,
-          capacity: cleanCapacity,
-          status: cleanStatus,
-        })
-        .select("id, title, domain, teacher_id, schedule, capacity, status, created_at")
-        .single();
+      const { data, error } = await req.supabaseClient!.rpc("marin_dev_create_class", {
+        p_token_hash: req.tokenHash!,
+        p_title: title.trim(),
+        p_domain: cleanDomain,
+        p_teacher_id: cleanTeacherId,
+        p_schedule: cleanSchedule,
+        p_capacity: cleanCapacity,
+        p_status: cleanStatus,
+      });
 
-      if (error) {
-        return res.status(400).json({ error: error.message });
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
       }
 
       return res.status(201).json({ classroom: data });
@@ -1310,40 +1084,27 @@ app.put(
       }
 
       const { title, domain, teacherId, schedule, capacity, status } = req.body || {};
-      const updates: Record<string, any> = {
-        updated_at: new Date().toISOString(),
-      };
 
-      if (typeof title === "string" && title.trim().length >= 2) {
-        updates.title = title.trim().slice(0, 140);
-      }
-      if (typeof domain === "string" && domain.trim()) {
-        updates.domain = domain.trim().slice(0, 120);
-      }
-      if (teacherId === null || teacherId === "") {
-        updates.teacher_id = null;
-      } else if (typeof teacherId === "string" && VALID_UUID_REGEX.test(teacherId)) {
-        updates.teacher_id = teacherId;
-      }
-      if (typeof schedule === "string") {
-        updates.schedule = schedule.trim().slice(0, 140);
-      }
-      if (typeof capacity === "number" && capacity >= 1 && capacity <= 500) {
-        updates.capacity = Math.floor(capacity);
-      }
-      if (status === "active" || status === "draft" || status === "archived") {
-        updates.status = status;
-      }
+      const { data, error } = await req.supabaseClient!.rpc("marin_dev_update_class", {
+        p_token_hash: req.tokenHash!,
+        p_class_id: classId,
+        p_title: typeof title === "string" && title.trim().length >= 2 ? title.trim().slice(0, 140) : null,
+        p_domain: typeof domain === "string" && domain.trim() ? domain.trim().slice(0, 120) : null,
+        p_teacher_id:
+          typeof teacherId === "string" && VALID_UUID_REGEX.test(teacherId) ? teacherId : null,
+        p_clear_teacher: teacherId === null || teacherId === "",
+        p_schedule: typeof schedule === "string" ? schedule.trim().slice(0, 140) : null,
+        p_capacity:
+          typeof capacity === "number" && capacity >= 1 && capacity <= 500
+            ? Math.floor(capacity)
+            : null,
+        p_status:
+          status === "active" || status === "draft" || status === "archived" ? status : null,
+      });
 
-      const { data, error } = await req.userSupabase!
-        .from("classes")
-        .update(updates)
-        .eq("id", classId)
-        .select("id, title, domain, teacher_id, schedule, capacity, status, created_at")
-        .single();
-
-      if (error) {
-        return res.status(400).json({ error: error.message });
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
       }
 
       return res.json({ classroom: data });
@@ -1366,13 +1127,14 @@ app.delete(
         return res.status(400).json({ error: "Identifiant de classe invalide." });
       }
 
-      const { error } = await req.userSupabase!
-        .from("classes")
-        .delete()
-        .eq("id", classId);
+      const { error } = await req.supabaseClient!.rpc("marin_dev_delete_class", {
+        p_token_hash: req.tokenHash!,
+        p_class_id: classId,
+      });
 
       if (error) {
-        return res.status(400).json({ error: error.message });
+        const mapped = mapRpcError(error.message);
+        return res.status(mapped.status).json({ error: mapped.message });
       }
 
       return res.json({ ok: true });
@@ -1408,26 +1170,15 @@ app.put(
         )
       );
 
-      const { error: delErr } = await req.userSupabase!
-        .from("class_enrollments")
-        .delete()
-        .eq("class_id", classId);
+      const { error } = await req.supabaseClient!.rpc("marin_dev_set_class_enrollments", {
+        p_token_hash: req.tokenHash!,
+        p_class_id: classId,
+        p_student_ids: cleanStudentIds,
+      });
 
-      if (delErr) {
-        return res.status(400).json({ error: delErr.message });
-      }
-
-      if (cleanStudentIds.length > 0) {
-        const rows = cleanStudentIds.map((studentId) => ({
-          class_id: classId,
-          student_id: studentId,
-        }));
-        const { error: insErr } = await req.userSupabase!
-          .from("class_enrollments")
-          .insert(rows);
-        if (insErr) {
-          return res.status(400).json({ error: insErr.message });
-        }
+      if (error) {
+        const mapped = mapRpcError(error.message);
+        return res.status(mapped.status).json({ error: mapped.message });
       }
 
       return res.json({ ok: true, studentIds: cleanStudentIds });
@@ -1562,8 +1313,7 @@ app.post(
   requireCsrfSafe,
   requireSupabaseAuth,
   async (req: AuthedRequest, res: Response) => {
-    const profileRow = await ensureProfileRow(req.userSupabase!, req.authUser!);
-    const role = normalizeRole(profileRow?.role);
+    const role = normalizeRole(req.callerProfile?.role);
     if (!["teacher", "admin", "developer"].includes(role)) {
       return res.status(403).json({
         error: "Seuls les formateurs, administrateurs ou développeurs peuvent publier des vidéos.",

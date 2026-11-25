@@ -149,17 +149,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         return;
       }
 
-      if (res.needsEmailConfirmation) {
-        setSuccessMessage(
-          language === "ar"
-            ? "تم إنشاء حسابك! يرجى تأكيد بريدك الإلكتروني (أو تعطيل Confirm email في إعدادات Supabase Auth لتسجيل الدخول مباشرة)."
-            : language === "en"
-              ? "Account created! Please confirm your email link (or turn off 'Confirm email' in Supabase Auth → Providers → Email for instant login)."
-              : "Compte créé ! Veuillez confirmer votre email (ou désactiver 'Confirm email' dans Supabase Auth → Providers → Email pour une connexion immédiate)."
-        );
-        return;
-      }
-
       setSuccessMessage(`${t("accountCreated")} ${prenom.trim()} — ${roleLabels.pendingConfirmation}`);
       setTimeout(() => {
         onSuccess();
