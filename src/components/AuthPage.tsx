@@ -34,7 +34,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 }) => {
   const [mode, setMode] = useState<"login" | "register">(initialMode);
   const { t, language, isRTL } = useLanguage();
-  const { login, register, supabaseConfigured } = useAuth();
+  const {
+    login,
+    register,
+    supabaseConfigured,
+    loading: authLoading,
+    apiReachable,
+  } = useAuth();
 
   // Registration fields
   const [nom, setNom] = useState<string>("");
@@ -294,15 +300,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               </button>
             </div>
 
-            {!supabaseConfigured && (
+            {!authLoading && (!apiReachable || !supabaseConfigured) && (
               <div className="mb-5 p-3.5 bg-sky-50 border border-sky-200 rounded-2xl flex items-start gap-2.5 text-xs text-[#041d37] font-semibold">
                 <Info className="w-4 h-4 text-[#1d8ccc] shrink-0 mt-0.5" />
                 <span>
-                  {language === "ar"
-                    ? "لتفعيل التسجيل وحفظ الحسابات عبر Supabase، يرجى إضافة SUPABASE_URL و SUPABASE_ANON_KEY في إعدادات البيئة."
-                    : language === "en"
-                      ? "Add SUPABASE_URL and SUPABASE_ANON_KEY in environment secrets to enable live Supabase authentication."
-                      : "Ajoutez SUPABASE_URL et SUPABASE_ANON_KEY dans les secrets d'environnement pour activer l'authentification Supabase."}
+                  {!apiReachable
+                    ? language === "ar"
+                      ? "تعذر الوصول إلى خادم الـ API (/api/auth/status). تأكد من رفع ملفات api/index.ts و vercel.json وإعادة النشر (Redeploy) على Vercel."
+                      : language === "en"
+                        ? "Unable to reach the /api backend (/api/auth/status). Ensure api/index.ts and vercel.json are deployed and trigger a Redeploy on Vercel."
+                        : "Impossible de joindre le backend /api (/api/auth/status). Vérifiez le déploiement de api/index.ts et vercel.json puis relancez un Redeploy sur Vercel."
+                    : language === "ar"
+                      ? "لتفعيل التسجيل وحفظ الحسابات عبر Supabase، يرجى إضافة SUPABASE_URL و SUPABASE_ANON_KEY في إعدادات البيئة ثم عمل Redeploy."
+                      : language === "en"
+                        ? "Add SUPABASE_URL and SUPABASE_ANON_KEY in your environment variables and trigger a Redeploy to enable live Supabase authentication."
+                        : "Ajoutez SUPABASE_URL et SUPABASE_ANON_KEY dans vos variables d'environnement puis lancez un Redeploy pour activer l'authentification Supabase."}
                 </span>
               </div>
             )}

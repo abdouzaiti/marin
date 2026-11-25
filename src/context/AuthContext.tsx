@@ -58,6 +58,7 @@ interface AuthContextType {
   accessToken: string | null;
   authenticated: boolean;
   loading: boolean;
+  apiReachable: boolean;
   supabaseConfigured: boolean;
   bunnyConfigured: boolean;
   role: UserRole;
@@ -84,6 +85,7 @@ const AuthContext = createContext<AuthContextType>({
   accessToken: null,
   authenticated: false,
   loading: true,
+  apiReachable: true,
   supabaseConfigured: false,
   bunnyConfigured: false,
   role: "guest",
@@ -105,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [apiReachable, setApiReachable] = useState<boolean>(true);
   const [supabaseConfigured, setSupabaseConfigured] = useState<boolean>(false);
   const [bunnyConfigured, setBunnyConfigured] = useState<boolean>(false);
 
@@ -144,15 +147,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (statusRes.ok) {
         const statusData = await safeReadJson(statusRes);
-        if (statusData) {
+        if (statusData && typeof statusData.supabaseConfigured === "boolean") {
+          setApiReachable(true);
           setSupabaseConfigured(Boolean(statusData.supabaseConfigured));
           setBunnyConfigured(Boolean(statusData.bunnyConfigured));
+        } else {
+          setApiReachable(false);
         }
+      } else {
+        setApiReachable(false);
       }
 
       if (sessionRes.ok) {
         const data = await safeReadJson(sessionRes);
-        if (data) {
+        if (data && typeof data.authenticated === "boolean") {
+          setApiReachable(true);
           setSupabaseConfigured((prev) => Boolean(data.supabaseConfigured ?? prev));
           if (data.authenticated && data.user && data.profile) {
             setAuthenticated(true);
@@ -169,6 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.error("Failed to hydrate auth session:", err);
+      setApiReachable(false);
     } finally {
       setLoading(false);
     }
@@ -365,6 +375,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         accessToken,
         authenticated,
         loading,
+        apiReachable,
         supabaseConfigured,
         bunnyConfigured,
         role,

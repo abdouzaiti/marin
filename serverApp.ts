@@ -4,20 +4,30 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
-dotenv.config();
+try {
+  dotenv.config();
+} catch {
+  // ignore missing .env file in serverless environments
+}
 
 const app = express();
 
 app.use(express.json({ limit: "1mb" }));
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || "",
-  httpOptions: {
-    headers: {
-      "User-Agent": "aistudio-build",
-    },
-  },
-});
+let cachedAi: GoogleGenAI | null = null;
+function getAiClient(): GoogleGenAI {
+  if (!cachedAi) {
+    cachedAi = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY || "",
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+  }
+  return cachedAi;
+}
 
 // ============================================================================
 // Cookie & CSRF Helpers
@@ -1646,7 +1656,7 @@ Return a JSON object with:
   - practicalProject: string
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await getAiClient().models.generateContent({
       model: "gemini-3.7-flash",
       contents: prompt,
       config: {
@@ -1702,7 +1712,7 @@ app.post("/api/ai/chat-tutor", async (req, res) => {
 You are currently assisting a student studying "${moduleTitle}".
 Be encouraging, precise, professional, and practical. Provide concrete examples and industry standards.`;
 
-    const chat = ai.chats.create({
+    const chat = getAiClient().chats.create({
       model: "gemini-3.7-flash",
       config: {
         systemInstruction,
@@ -1733,7 +1743,7 @@ Return a JSON array of questions, each with:
 - explanation: string
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await getAiClient().models.generateContent({
       model: "gemini-3.7-flash",
       contents: prompt,
       config: {
@@ -1778,7 +1788,7 @@ Evaluate this action professionally. Return a JSON object with:
 - expertTip: string
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await getAiClient().models.generateContent({
       model: "gemini-3.7-flash",
       contents: prompt,
       config: {
@@ -1820,7 +1830,7 @@ Provide career guidance and recommendations in JSON format with:
 - interviewTips: array of strings
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await getAiClient().models.generateContent({
       model: "gemini-3.7-flash",
       contents: prompt,
       config: {
