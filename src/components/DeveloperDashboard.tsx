@@ -18,6 +18,10 @@ import {
   AlertCircle,
   ShieldCheck,
   Layers,
+  Eye,
+  EyeOff,
+  Copy,
+  Key,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { UserProfile, UserRole, Classroom } from "../types";
@@ -95,6 +99,15 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
     password: "",
   });
   const [savingEditUser, setSavingEditUser] = useState<boolean>(false);
+  const [maskedUserPasswords, setMaskedUserPasswords] = useState<Record<string, boolean>>({});
+  const [showEditPassword, setShowEditPassword] = useState<boolean>(true);
+
+  const toggleMaskPassword = (id: string) => {
+    setMaskedUserPasswords((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   // Create / Edit Class Modal
   const [classModalOpen, setClassModalOpen] = useState<boolean>(false);
@@ -171,7 +184,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
       role: u.role || "student",
       title: u.title || "",
       activeDomain: u.activeDomain || DOMAINS[0],
-      password: "",
+      password: u.password || "",
     });
     setEditUserModalOpen(true);
   };
@@ -735,8 +748,39 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                                   </div>
                                   <div className="text-[11px] text-slate-400">{u.title}</div>
                                 </td>
-                                <td className="py-3.5 px-4 font-mono text-slate-500 text-xs">
-                                  •••••••• (Bcrypt)
+                                <td className="py-3.5 px-4">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-sky-50 text-[#041d37] border border-sky-200 select-all tracking-wide">
+                                      {maskedUserPasswords[uid] ? "••••••••" : (u.password || "••••••••")}
+                                    </span>
+                                    {u.password && (
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleMaskPassword(uid)}
+                                        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition-colors"
+                                        title={maskedUserPasswords[uid] ? copy.showPassword : copy.hidePassword}
+                                      >
+                                        {maskedUserPasswords[uid] ? (
+                                          <Eye className="w-3.5 h-3.5" />
+                                        ) : (
+                                          <EyeOff className="w-3.5 h-3.5" />
+                                        )}
+                                      </button>
+                                    )}
+                                    {u.password && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(u.password!);
+                                          showToast(copy.passwordCopied);
+                                        }}
+                                        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition-colors"
+                                        title={copy.copyPassword}
+                                      >
+                                        <Copy className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="py-3.5 px-4 text-end">
                                   <button
@@ -1745,15 +1789,25 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[#041d37]">{copy.passwordLabel} (Reset)</label>
-                <input
-                  type="text"
-                  value={editUserForm.password}
-                  onChange={(e) => setEditUserForm((f) => ({ ...f, password: e.target.value }))}
-                  placeholder="••••••••"
-                  dir="ltr"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-left font-mono focus:bg-white focus:outline-none focus:border-[#1d8ccc]"
-                />
+                <label className="text-xs font-bold text-[#041d37]">{copy.realPasswordLabel}</label>
+                <div className="relative">
+                  <input
+                    type={showEditPassword ? "text" : "password"}
+                    value={editUserForm.password}
+                    onChange={(e) => setEditUserForm((f) => ({ ...f, password: e.target.value }))}
+                    placeholder="••••••••"
+                    dir="ltr"
+                    className="w-full px-3.5 py-2 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-sm text-left font-mono focus:bg-white focus:outline-none focus:border-[#1d8ccc]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#1d8ccc] cursor-pointer"
+                    title={showEditPassword ? copy.hidePassword : copy.showPassword}
+                  >
+                    {showEditPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
                 <p className="text-[11px] text-slate-500">{copy.newPasswordHint}</p>
               </div>
 
@@ -1820,9 +1874,14 @@ function useDeveloperCopy(language: "fr" | "ar" | "en") {
       tabUsers: "جميع المستخدمين",
       usersTitle: "جميع المستخدمين وكلمات المرور",
       usersSub: "عرض وإدارة جميع حسابات المنصة وصلاحياتهم وكلمات المرور.",
-      colPassword: "كلمة المرور (مشفرة / إعادة تعيين)",
+      colPassword: "كلمة المرور الحقيقية",
+      realPasswordLabel: "كلمة المرور الحقيقية",
+      showPassword: "إظهار كلمة المرور",
+      hidePassword: "إخفاء كلمة المرور",
+      copyPassword: "نسخ كلمة المرور",
+      passwordCopied: "تم نسخ كلمة المرور إلى الحافظة!",
       editUserTitle: "تعديل حساب المستخدم",
-      newPasswordHint: "اترك الحقل فارغاً للإبقاء على كلمة المرور الحالية أو أدخل كلمة مرور جديدة لتغييرها.",
+      newPasswordHint: "يمكنك تعديل كلمة المرور هنا وسيتم تحديثها تلقائياً مع تشفير Bcrypt.",
       userUpdated: "تم تحديث بيانات المستخدم بنجاح.",
       tabRequests: "طلبات التسجيل",
       tabClasses: "الفصول",
@@ -1914,9 +1973,14 @@ function useDeveloperCopy(language: "fr" | "ar" | "en") {
       tabUsers: "All Users",
       usersTitle: "All Users & Passwords Directory",
       usersSub: "View and edit all platform user accounts, roles, and credentials.",
-      colPassword: "Password (Bcrypt Hash / Reset)",
+      colPassword: "Real Password",
+      realPasswordLabel: "Real Password",
+      showPassword: "Show password",
+      hidePassword: "Hide password",
+      copyPassword: "Copy password",
+      passwordCopied: "Password copied to clipboard!",
       editUserTitle: "Edit User Account",
-      newPasswordHint: "Leave blank to keep current password or enter a new password to reset it.",
+      newPasswordHint: "Modify this field to update the password (updates both real password and bcrypt hash).",
       userUpdated: "User account updated successfully.",
       tabRequests: "Registration Requests",
       tabClasses: "Classes",
@@ -2007,9 +2071,14 @@ function useDeveloperCopy(language: "fr" | "ar" | "en") {
     tabUsers: "Tous les utilisateurs",
     usersTitle: "Répertoire Global des Utilisateurs & Mots de passe",
     usersSub: "Visualisez et modifiez l'ensemble des comptes, rôles et mots de passe.",
-    colPassword: "Mot de passe (Bcrypt / Réinitialisation)",
+    colPassword: "Mot de passe réel",
+    realPasswordLabel: "Mot de passe réel",
+    showPassword: "Afficher le mot de passe",
+    hidePassword: "Masquer le mot de passe",
+    copyPassword: "Copier le mot de passe",
+    passwordCopied: "Mot de passe copié dans le presse-papier !",
     editUserTitle: "Modifier le compte utilisateur",
-    newPasswordHint: "Laissez vide pour conserver le mot de passe actuel ou entrez un nouveau mot de passe.",
+    newPasswordHint: "Modifiez ce champ pour changer le mot de passe (met à jour le mot de passe réel et le hash bcrypt).",
     userUpdated: "Compte utilisateur mis à jour avec succès.",
     tabRequests: "Demandes d'inscription",
     tabClasses: "Classes",

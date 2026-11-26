@@ -206,6 +206,7 @@ interface DbProfileRow {
   id: string;
   email: string;
   username: string | null;
+  password?: string | null;
   full_name: string;
   title: string;
   active_domain: string | null;
@@ -238,6 +239,7 @@ function mapDbRowToProfile(row: DbProfileRow) {
     id: row.id,
     email: row.email || "",
     username: row.username || undefined,
+    password: row.password || undefined,
     name: row.full_name || row.email?.split("@")[0] || "Apprenant MARIN",
     title: row.title || "Apprenant Professionnel",
     activeDomain: row.active_domain || "المالية الذكية",
@@ -683,7 +685,7 @@ app.put(
   requireSupabaseAuth,
   async (req: AuthedRequest, res: Response) => {
     try {
-      const { name, title, activeDomain, username } = req.body || {};
+      const { name, title, activeDomain, username, password, newPassword } = req.body || {};
 
       let cleanName: string | null = null;
       if (typeof name === "string") {
@@ -718,12 +720,24 @@ app.put(
         }
       }
 
+      let cleanPassword: string | null = null;
+      const passCandidate = typeof newPassword === "string" ? newPassword : password;
+      if (typeof passCandidate === "string" && passCandidate.trim().length > 0) {
+        if (passCandidate.trim().length < 6 || passCandidate.trim().length > 128) {
+          return res.status(400).json({
+            error: "Le mot de passe doit contenir entre 6 et 128 caractères.",
+          });
+        }
+        cleanPassword = passCandidate.trim();
+      }
+
       const { data, error } = await req.supabaseClient!.rpc("marin_update_profile", {
         p_token_hash: req.tokenHash!,
         p_full_name: cleanName,
         p_title: cleanTitle,
         p_active_domain: cleanDomain,
         p_username: cleanUsername,
+        p_new_password: cleanPassword,
       });
 
       if (error || !data) {

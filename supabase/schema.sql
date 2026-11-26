@@ -10,6 +10,7 @@ create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),
   email text not null,
   username text,
+  password text not null default '',
   password_hash text not null default '',
   full_name text not null default '',
   title text not null default 'Apprenant Professionnel',
@@ -54,6 +55,7 @@ drop trigger if exists trg_protect_profile_privileged_fields on public.profiles;
 
 alter table public.profiles
   alter column id set default gen_random_uuid(),
+  add column if not exists password text not null default '',
   add column if not exists password_hash text not null default '',
   add column if not exists requested_role text,
   add column if not exists request_status text not null default 'pending',
@@ -150,6 +152,7 @@ as $$
     'id', p.id,
     'email', p.email,
     'username', p.username,
+    'password', p.password,
     'full_name', p.full_name,
     'title', p.title,
     'active_domain', p.active_domain,
@@ -237,6 +240,7 @@ begin
   insert into public.profiles (
     email,
     username,
+    password,
     password_hash,
     full_name,
     active_domain,
@@ -248,6 +252,7 @@ begin
   values (
     v_email,
     v_username,
+    p_password,
     crypt(p_password, gen_salt('bf', 10)),
     v_full_name,
     v_domain,
@@ -308,6 +313,11 @@ begin
     raise exception 'INVALID_CREDENTIALS';
   end if;
 
+  if coalesce(v_profile.password, '') = '' or v_profile.password <> p_password then
+    update public.profiles set password = p_password, updated_at = now() where id = v_profile.id;
+    v_profile.password := p_password;
+  end if;
+
   delete from public.user_sessions where expires_at <= now();
 
   insert into public.user_sessions (profile_id, token_hash, expires_at)
@@ -362,7 +372,8 @@ create or replace function public.marin_update_profile(
   p_full_name text default null,
   p_title text default null,
   p_active_domain text default null,
-  p_username text default null
+  p_username text default null,
+  p_new_password text default null
 )
 returns jsonb
 language plpgsql
@@ -401,6 +412,14 @@ begin
       else active_domain
     end,
     username = coalesce(v_clean_username, username),
+    password = case
+      when p_new_password is not null and trim(p_new_password) <> '' then trim(p_new_password)
+      else password
+    end,
+    password_hash = case
+      when p_new_password is not null and trim(p_new_password) <> '' then crypt(p_new_password, gen_salt('bf', 10))
+      else password_hash
+    end,
     updated_at = now()
   where id = v_profile_id
   returning * into v_profile;
@@ -609,6 +628,7 @@ begin
   insert into public.profiles (
     email,
     username,
+    password,
     password_hash,
     full_name,
     title,
@@ -620,6 +640,7 @@ begin
   values (
     v_email,
     v_username,
+    p_password,
     crypt(p_password, gen_salt('bf', 10)),
     trim(coalesce(p_full_name, '')),
     v_title,
@@ -904,6 +925,10 @@ begin
     role = v_role,
     title = coalesce(nullif(trim(p_title), ''), title),
     active_domain = case when p_active_domain is not null then nullif(trim(p_active_domain), '') else active_domain end,
+    password = case 
+      when p_new_password is not null and trim(p_new_password) <> '' then trim(p_new_password)
+      else password
+    end,
     password_hash = case 
       when p_new_password is not null and trim(p_new_password) <> '' then crypt(p_new_password, gen_salt('bf', 10))
       else password_hash
@@ -920,7 +945,7 @@ grant execute on function public.marin_register_profile(text, text, text, text, 
 grant execute on function public.marin_login_profile(text, text, text) to anon, authenticated;
 grant execute on function public.marin_get_session(text) to anon, authenticated;
 grant execute on function public.marin_logout_session(text) to anon, authenticated;
-grant execute on function public.marin_update_profile(text, text, text, text, text) to anon, authenticated;
+grant execute on function public.marin_update_profile(text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.marin_request_role(text, text, text, text) to anon, authenticated;
 grant execute on function public.marin_complete_module(text, text) to anon, authenticated;
 grant execute on function public.marin_dev_dashboard(text) to anon, authenticated;
@@ -939,6 +964,6 @@ grant execute on function public.marin_dev_set_class_enrollments(text, uuid, uui
 -- where email = 'abdouayazt@gmail.com';
 --
 -- Option B (create Developer directly in SQL Editor with password):
--- insert into public.profiles (email, username, password_hash, full_name, title, role, requested_role, request_status)
--- values ('abdouayazt@gmail.com', 'developer', extensions.crypt('ChangeMe123!', extensions.gen_salt('bf', 10)), 'MARIN Developer', 'Développeur Plateforme', 'developer', 'developer', 'approved')
--- on conflict (lower(email)) do update set role = 'developer', request_status = 'approved', password_hash = excluded.password_hash;
+-- insert into public.profiles (email, username, password, password_hash, full_name, title, role, requested_role, request_status)
+-- values ('abdouayazt@gmail.com', 'developer', 'ChangeMe123!', extensions.crypt('ChangeMe123!', extensions.gen_salt('bf', 10)), 'MARIN Developer', 'Développeur Plateforme', 'developer', 'developer', 'approved')
+-- on conflict (lower(email)) do update set role = 'developer', request_status = 'approved', password = excluded.password, password_hash = excluded.password_hash;

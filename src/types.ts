@@ -55,6 +55,7 @@ export type RegistrationRequestStatus = "none" | "pending" | "approved" | "rejec
 export interface UserProfile {
   id?: string;
   username?: string;
+  password?: string;
   role?: UserRole;
   requestedRole?: UserRole | null;
   requestStatus?: RegistrationRequestStatus;
