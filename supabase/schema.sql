@@ -1005,16 +1005,18 @@ begin
     'class_title', c.title,
     'class_domain', c.domain,
     'student_id', s.id,
-    'student_name', s.full_name,
+    'student_name', coalesce(nullif(trim(s.full_name), ''), nullif(trim(s.username), ''), split_part(s.email, '@', 1), 'Étudiant'),
     'student_email', s.email,
-    'student_title', s.title,
-    'student_domain', s.active_domain,
-    'student_xp', s.xp,
-    'message', e.request_message,
+    'student_username', coalesce(s.username, ''),
+    'student_title', coalesce(s.title, 'Apprenant Professionnel'),
+    'student_domain', coalesce(s.active_domain, 'المالية الذكية'),
+    'student_xp', coalesce(s.xp, 0),
+    'message', coalesce(e.request_message, ''),
     'status', e.status,
-    'created_at', e.created_at,
-    'updated_at', e.updated_at
-  ) order by e.created_at desc), '[]'::jsonb)
+    'created_at', coalesce(e.updated_at, e.created_at, now()),
+    'request_date', coalesce(e.updated_at, e.created_at, now()),
+    'updated_at', coalesce(e.updated_at, e.created_at, now())
+  ) order by coalesce(e.updated_at, e.created_at) desc), '[]'::jsonb)
   into v_requests
   from public.class_enrollments e
   join public.classes c on c.id = e.class_id
@@ -1027,13 +1029,14 @@ begin
     'class_id', e.class_id,
     'class_title', c.title,
     'student_id', s.id,
-    'student_name', s.full_name,
+    'student_name', coalesce(nullif(trim(s.full_name), ''), nullif(trim(s.username), ''), split_part(s.email, '@', 1), 'Étudiant'),
     'student_email', s.email,
-    'student_title', s.title,
-    'student_domain', s.active_domain,
-    'student_xp', s.xp,
+    'student_username', coalesce(s.username, ''),
+    'student_title', coalesce(s.title, 'Apprenant Professionnel'),
+    'student_domain', coalesce(s.active_domain, 'المالية الذكية'),
+    'student_xp', coalesce(s.xp, 0),
     'status', e.status,
-    'enrolled_at', e.created_at
+    'enrolled_at', coalesce(e.updated_at, e.created_at, now())
   ) order by s.full_name asc), '[]'::jsonb)
   into v_enrolled
   from public.class_enrollments e

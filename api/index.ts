@@ -1292,7 +1292,113 @@ app.get(
         return res.status(mapped.status).json({ error: mapped.message });
       }
 
-      return res.json(data);
+      const rawRequests = Array.isArray(data.requests) ? data.requests : [];
+      const requests = rawRequests.map((r: any) => {
+        const studentName =
+          (typeof r.student_name === "string" && r.student_name.trim()) ||
+          (typeof r.studentName === "string" && r.studentName.trim()) ||
+          (typeof r.full_name === "string" && r.full_name.trim()) ||
+          (typeof r.username === "string" && r.username.trim()) ||
+          (typeof r.student_email === "string" && r.student_email.split("@")[0]) ||
+          (typeof r.studentEmail === "string" && r.studentEmail.split("@")[0]) ||
+          "Étudiant";
+
+        const studentEmail =
+          r.student_email || r.studentEmail || r.email || "";
+
+        const studentUsername =
+          r.student_username || r.studentUsername || r.username || "";
+
+        const createdAt =
+          r.created_at || r.createdAt || r.request_date || r.updated_at || r.updatedAt || new Date().toISOString();
+
+        return {
+          ...r,
+          id: r.id,
+          classId: r.class_id || r.classId,
+          class_id: r.class_id || r.classId,
+          classTitle: r.class_title || r.classTitle,
+          class_title: r.class_title || r.classTitle,
+          classDomain: r.class_domain || r.classDomain || "المالية الذكية",
+          class_domain: r.class_domain || r.classDomain || "المالية الذكية",
+          studentId: r.student_id || r.studentId,
+          student_id: r.student_id || r.studentId,
+          studentName,
+          student_name: studentName,
+          studentEmail,
+          student_email: studentEmail,
+          studentUsername,
+          student_username: studentUsername,
+          studentTitle: r.student_title || r.studentTitle || "Apprenant Professionnel",
+          studentDomain: r.student_domain || r.studentDomain || "المالية الذكية",
+          studentXp: r.student_xp ?? r.studentXp ?? 0,
+          message: r.message || r.request_message || "",
+          status: r.status || "pending",
+          createdAt,
+          created_at: createdAt,
+          updatedAt: r.updated_at || r.updatedAt || createdAt,
+          updated_at: r.updated_at || r.updatedAt || createdAt,
+        };
+      });
+
+      const rawEnrolled = Array.isArray(data.enrolledStudents) ? data.enrolledStudents : [];
+      const enrolledStudents = rawEnrolled.map((s: any) => {
+        const studentName =
+          (typeof s.student_name === "string" && s.student_name.trim()) ||
+          (typeof s.studentName === "string" && s.studentName.trim()) ||
+          (typeof s.full_name === "string" && s.full_name.trim()) ||
+          (typeof s.username === "string" && s.username.trim()) ||
+          (typeof s.student_email === "string" && s.student_email.split("@")[0]) ||
+          "Étudiant";
+
+        return {
+          ...s,
+          id: s.id,
+          classId: s.class_id || s.classId,
+          class_id: s.class_id || s.classId,
+          classTitle: s.class_title || s.classTitle,
+          class_title: s.class_title || s.classTitle,
+          studentId: s.student_id || s.studentId,
+          student_id: s.student_id || s.studentId,
+          studentName,
+          student_name: studentName,
+          studentEmail: s.student_email || s.studentEmail || s.email || "",
+          student_email: s.student_email || s.studentEmail || s.email || "",
+          studentTitle: s.student_title || s.studentTitle || "Apprenant Professionnel",
+          studentDomain: s.student_domain || s.studentDomain || "المالية الذكية",
+          studentXp: s.student_xp ?? s.studentXp ?? 0,
+          status: s.status || "approved",
+          enrolledAt: s.enrolled_at || s.enrolledAt || s.created_at || new Date().toISOString(),
+          enrolled_at: s.enrolled_at || s.enrolledAt || s.created_at || new Date().toISOString(),
+        };
+      });
+
+      const rawClasses = Array.isArray(data.classes) ? data.classes : [];
+      const classes = rawClasses.map((c: any) => ({
+        ...c,
+        id: c.id,
+        title: c.title,
+        domain: c.domain,
+        description: c.description || "",
+        teacherId: c.teacher_id ?? c.teacherId,
+        teacher_id: c.teacher_id ?? c.teacherId,
+        schedule: c.schedule || "",
+        capacity: typeof c.capacity === "number" ? c.capacity : 30,
+        status: c.status || "active",
+        studentCount: c.student_count ?? c.studentCount ?? 0,
+        student_count: c.student_count ?? c.studentCount ?? 0,
+        pendingCount: c.pending_count ?? c.pendingCount ?? 0,
+        pending_count: c.pending_count ?? c.pendingCount ?? 0,
+        createdAt: c.created_at || c.createdAt || new Date().toISOString(),
+        created_at: c.created_at || c.createdAt || new Date().toISOString(),
+      }));
+
+      return res.json({
+        teacher: data.teacher,
+        classes,
+        requests,
+        enrolledStudents,
+      });
     } catch (err) {
       console.error("Teacher dashboard load error:", err);
       return res.status(500).json({ error: "Erreur lors du chargement de l'espace formateur." });

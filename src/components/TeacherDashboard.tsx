@@ -282,44 +282,99 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     setClassModalOpen(true);
   };
 
+  const formatTalabDateTime = (rawDate?: string) => {
+    if (!rawDate) {
+      return { dateStr: "—", timeStr: "", relativeStr: "" };
+    }
+    try {
+      const d = new Date(rawDate);
+      if (isNaN(d.getTime())) {
+        return { dateStr: "—", timeStr: "", relativeStr: "" };
+      }
+
+      const locale = language === "ar" ? "ar-DZ" : language === "en" ? "en-GB" : "fr-FR";
+
+      const dateStr = d.toLocaleDateString(locale, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+
+      const timeStr = d.toLocaleTimeString(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      });
+
+      const diffMs = Date.now() - d.getTime();
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHours = Math.floor(diffMin / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      let relativeStr = "";
+      if (language === "ar") {
+        if (diffSec < 45) relativeStr = "الآن";
+        else if (diffMin < 60) relativeStr = `منذ ${diffMin} د`;
+        else if (diffHours < 24) relativeStr = `منذ ${diffHours} س`;
+        else relativeStr = `منذ ${diffDays} يوم`;
+      } else if (language === "en") {
+        if (diffSec < 45) relativeStr = "just now";
+        else if (diffMin < 60) relativeStr = `${diffMin}m ago`;
+        else if (diffHours < 24) relativeStr = `${diffHours}h ago`;
+        else relativeStr = `${diffDays}d ago`;
+      } else {
+        if (diffSec < 45) relativeStr = "à l'instant";
+        else if (diffMin < 60) relativeStr = `il y a ${diffMin} min`;
+        else if (diffHours < 24) relativeStr = `il y a ${diffHours} h`;
+        else relativeStr = `il y a ${diffDays} j`;
+      }
+
+      return { dateStr, timeStr, relativeStr };
+    } catch {
+      return { dateStr: "—", timeStr: "", relativeStr: "" };
+    }
+  };
+
   // Filtered classes
   const filteredClasses = classes.filter((c) => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
     return (
-      c.title.toLowerCase().includes(q) ||
-      c.domain.toLowerCase().includes(q) ||
+      (c.title && c.title.toLowerCase().includes(q)) ||
+      (c.domain && c.domain.toLowerCase().includes(q)) ||
       (c.description && c.description.toLowerCase().includes(q))
     );
   });
 
   // Filtered requests
   const filteredRequests = requests.filter((r) => {
-    if (selectedClassFilter !== "all" && r.classId !== selectedClassFilter) {
+    const classId = r.classId || (r as any).class_id;
+    if (selectedClassFilter !== "all" && classId !== selectedClassFilter) {
       return false;
     }
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
-    return (
-      r.studentName.toLowerCase().includes(q) ||
-      r.studentEmail.toLowerCase().includes(q) ||
-      r.classTitle.toLowerCase().includes(q) ||
-      (r.message && r.message.toLowerCase().includes(q))
-    );
+    const name = (r.studentName || (r as any).student_name || (r as any).full_name || "").toLowerCase();
+    const email = (r.studentEmail || (r as any).student_email || "").toLowerCase();
+    const title = (r.classTitle || (r as any).class_title || "").toLowerCase();
+    const msg = (r.message || (r as any).request_message || "").toLowerCase();
+    return name.includes(q) || email.includes(q) || title.includes(q) || msg.includes(q);
   });
 
   // Filtered enrolled students
   const filteredStudents = enrolledStudents.filter((s) => {
-    if (selectedClassFilter !== "all" && s.class_id !== selectedClassFilter) {
+    const classId = s.classId || s.class_id;
+    if (selectedClassFilter !== "all" && classId !== selectedClassFilter) {
       return false;
     }
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
-    return (
-      (s.student_name && s.student_name.toLowerCase().includes(q)) ||
-      (s.student_email && s.student_email.toLowerCase().includes(q)) ||
-      (s.class_title && s.class_title.toLowerCase().includes(q))
-    );
+    const name = (s.studentName || s.student_name || "").toLowerCase();
+    const email = (s.studentEmail || s.student_email || "").toLowerCase();
+    const title = (s.classTitle || s.class_title || "").toLowerCase();
+    return name.includes(q) || email.includes(q) || title.includes(q);
   });
 
   const totalEnrolledCount = classes.reduce((sum, c) => sum + (c.studentCount || 0), 0);
@@ -773,27 +828,72 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     </tr>
                   ) : (
                     filteredRequests.map((req) => {
-                      const isBusy = actionBusyStudentId === req.studentId;
+                      const classId = req.classId || (req as any).class_id;
+                      const studentId = req.studentId || (req as any).student_id;
+                      const isBusy = actionBusyStudentId === studentId;
+
+                      const studentName =
+                        (typeof req.studentName === "string" && req.studentName.trim()) ||
+                        (typeof (req as any).student_name === "string" && (req as any).student_name.trim()) ||
+                        (typeof (req as any).full_name === "string" && (req as any).full_name.trim()) ||
+                        (typeof (req as any).username === "string" && (req as any).username.trim()) ||
+                        (req.studentEmail ? req.studentEmail.split("@")[0] : "") ||
+                        "Étudiant";
+
+                      const studentEmail = req.studentEmail || (req as any).student_email || "";
+                      const studentUsername =
+                        (req as any).studentUsername ||
+                        (req as any).student_username ||
+                        (req as any).username ||
+                        "";
+                      const studentDomain =
+                        req.studentDomain || (req as any).student_domain || DOMAINS[0];
+                      const studentXp = req.studentXp ?? (req as any).student_xp ?? 0;
+
+                      const rawTalabDate =
+                        req.createdAt ||
+                        (req as any).created_at ||
+                        (req as any).request_date ||
+                        (req as any).requestDate ||
+                        (req as any).updated_at ||
+                        (req as any).updatedAt;
+
+                      const { dateStr, timeStr, relativeStr } = formatTalabDateTime(rawTalabDate);
+
                       return (
-                        <tr key={req.id} className="hover:bg-amber-50/30 transition-colors">
-                          {/* Student Info */}
+                        <tr key={req.id || `${classId}-${studentId}`} className="hover:bg-amber-50/30 transition-colors">
+                          {/* Student Info (Real Student Name) */}
                           <td className="py-3.5 px-4">
-                            <div className="font-bold text-[#041d37]">{req.studentName}</div>
-                            <div className="text-[11px] text-slate-500" dir="ltr">
-                              {req.studentEmail}
-                            </div>
-                            <div className="text-[10px] text-[#1d8ccc] font-semibold">
-                              {req.studentDomain || DOMAINS[0]} • {req.studentXp || 0} XP
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#041d37] to-[#1d8ccc] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
+                                {studentName.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-bold text-[#041d37] text-sm leading-snug flex items-center gap-2 flex-wrap">
+                                  <span className="truncate">{studentName}</span>
+                                  {studentUsername && (
+                                    <span className="text-[11px] text-slate-400 font-semibold" dir="ltr">
+                                      @{studentUsername}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-[11px] text-slate-500 font-medium truncate" dir="ltr">
+                                  {studentEmail}
+                                </div>
+                                <div className="text-[10px] text-[#1d8ccc] font-bold mt-0.5">
+                                  {studentDomain} • {studentXp} XP
+                                </div>
+                              </div>
                             </div>
                           </td>
 
                           {/* Class Title */}
                           <td className="py-3.5 px-4">
                             <span className="font-bold text-[#041d37] block">
-                              {req.classTitle}
+                              {req.classTitle || (req as any).class_title}
                             </span>
                             <span className="text-[11px] text-slate-400">
-                              {(req as any).class_domain}
+                              {(req as any).class_domain || (req as any).classDomain}
                             </span>
                           </td>
 
@@ -808,16 +908,27 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                             )}
                           </td>
 
-                          {/* Request Date */}
-                          <td className="py-3.5 px-4 text-slate-500 text-xs whitespace-nowrap">
-                            {req.createdAt
-                              ? new Date(req.createdAt).toLocaleDateString(language, {
-                                  day: "numeric",
-                                  month: "short",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "—"}
+                          {/* Request Date & Time (Real time and date of talab) */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-[#041d37]">
+                                <Calendar className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <span>{dateStr}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
+                                {timeStr && (
+                                  <span className="flex items-center gap-1" dir="ltr">
+                                    <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                                    <span className="font-mono font-semibold text-slate-700">{timeStr}</span>
+                                  </span>
+                                )}
+                                {relativeStr && (
+                                  <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200/80">
+                                    {relativeStr}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </td>
 
                           {/* Action Buttons: Give Access or Deny */}
@@ -826,9 +937,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               {/* Give Access (Approve) */}
                               <button
                                 type="button"
-                                disabled={isBusy}
+                                disabled={isBusy || !classId || !studentId}
                                 onClick={() =>
-                                  handleStudentAccessDecision(req.classId, req.studentId, "approved")
+                                  handleStudentAccessDecision(classId, studentId, "approved")
                                 }
                                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs disabled:opacity-60"
                               >
@@ -843,9 +954,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               {/* Deny (Reject) */}
                               <button
                                 type="button"
-                                disabled={isBusy}
+                                disabled={isBusy || !classId || !studentId}
                                 onClick={() =>
-                                  handleStudentAccessDecision(req.classId, req.studentId, "rejected")
+                                  handleStudentAccessDecision(classId, studentId, "rejected")
                                 }
                                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-colors cursor-pointer disabled:opacity-60"
                               >
@@ -899,38 +1010,65 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     </tr>
                   ) : (
                     filteredStudents.map((st) => {
-                      const isBusy = actionBusyStudentId === st.student_id;
+                      const classId = st.classId || st.class_id;
+                      const studentId = st.studentId || st.student_id;
+                      const isBusy = actionBusyStudentId === studentId;
+
+                      const studentName =
+                        (typeof st.studentName === "string" && st.studentName.trim()) ||
+                        (typeof st.student_name === "string" && st.student_name.trim()) ||
+                        (typeof (st as any).full_name === "string" && (st as any).full_name.trim()) ||
+                        (st.studentEmail ? st.studentEmail.split("@")[0] : "") ||
+                        (st.student_email ? st.student_email.split("@")[0] : "") ||
+                        "Étudiant";
+
+                      const studentEmail = st.studentEmail || st.student_email || "";
+                      const rawEnrollDate = st.enrolledAt || st.enrolled_at || st.createdAt || st.created_at;
+                      const { dateStr, timeStr } = formatTalabDateTime(rawEnrollDate);
+
                       return (
-                        <tr key={st.id} className="hover:bg-sky-50/30 transition-colors">
+                        <tr key={st.id || `${classId}-${studentId}`} className="hover:bg-sky-50/30 transition-colors">
                           <td className="py-3.5 px-4">
-                            <div className="font-bold text-[#041d37]">{st.student_name}</div>
-                            <div className="text-[11px] text-slate-500" dir="ltr">
-                              {st.student_email}
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
+                                {studentName.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-bold text-[#041d37] text-sm leading-tight truncate">
+                                  {studentName}
+                                </div>
+                                <div className="text-[11px] text-slate-500 font-medium truncate" dir="ltr">
+                                  {studentEmail}
+                                </div>
+                              </div>
                             </div>
                           </td>
                           <td className="py-3.5 px-4 font-bold text-[#041d37]">
-                            {st.class_title}
+                            {st.classTitle || st.class_title}
                           </td>
                           <td className="py-3.5 px-4">
                             <span className="px-2.5 py-0.5 rounded-full bg-sky-50 text-[#1d8ccc] border border-sky-100 text-[11px] font-bold">
-                              {st.student_domain || DOMAINS[0]}
+                              {st.studentDomain || st.student_domain || DOMAINS[0]}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 text-slate-500 text-xs whitespace-nowrap">
-                            {st.enrolled_at
-                              ? new Date(st.enrolled_at).toLocaleDateString(language, {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })
-                              : "—"}
+                          <td className="py-3.5 px-4 text-slate-600 text-xs whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+                              <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>{dateStr}</span>
+                            </div>
+                            {timeStr && (
+                              <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium mt-0.5" dir="ltr">
+                                <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                                <span>{timeStr}</span>
+                              </div>
+                            )}
                           </td>
                           <td className="py-3.5 px-4 text-end">
                             <button
                               type="button"
                               disabled={isBusy}
                               onClick={() =>
-                                handleStudentAccessDecision(st.class_id, st.student_id, "removed")
+                                handleStudentAccessDecision(classId, studentId, "removed")
                               }
                               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
                               title={copy.revokeAccessTitle}
