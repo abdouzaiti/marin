@@ -1020,6 +1020,47 @@ app.patch(
   }
 );
 
+app.put(
+  "/api/dev/users/:userId",
+  requireCsrfSafe,
+  requireSupabaseAuth,
+  requireDeveloperAuth,
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const { userId } = req.params;
+      if (!userId || !VALID_UUID_REGEX.test(userId)) {
+        return res.status(400).json({ error: "Identifiant utilisateur invalide." });
+      }
+
+      const { fullName, email, username, role, title, activeDomain, password } = req.body || {};
+
+      const { data, error } = await req.supabaseClient!.rpc("marin_dev_update_user_full", {
+        p_token_hash: req.tokenHash!,
+        p_target_user_id: userId,
+        p_full_name: typeof fullName === "string" ? fullName.trim() : null,
+        p_email: typeof email === "string" ? email.trim().toLowerCase() : null,
+        p_username: typeof username === "string" && username.trim() ? username.trim() : null,
+        p_role: VALID_ROLES.includes(role) ? role : null,
+        p_title: typeof title === "string" ? title.trim().slice(0, 120) : null,
+        p_active_domain: typeof activeDomain === "string" ? activeDomain.trim().slice(0, 120) : null,
+        p_new_password: typeof password === "string" && password.trim() ? password.trim() : null,
+      });
+
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
+      }
+
+      return res.json({
+        user: mapDbRowToProfile(data as DbProfileRow),
+      });
+    } catch (err) {
+      console.error("Developer update user full error:", err);
+      return res.status(500).json({ error: "Erreur lors de la modification de l'utilisateur." });
+    }
+  }
+);
+
 app.post(
   "/api/dev/classes",
   requireCsrfSafe,

@@ -29,7 +29,7 @@ interface DeveloperDashboardProps {
   onBackToHome: () => void;
 }
 
-type TableViewTab = "all" | "requests" | "classes" | "teachers" | "students" | "staff";
+type TableViewTab = "all" | "requests" | "classes" | "teachers" | "students" | "staff" | "users";
 
 const ALL_ROLES: UserRole[] = ["guest", "student", "teacher", "admin", "developer"];
 
@@ -59,6 +59,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
   const [teachers, setTeachers] = useState<UserProfile[]>([]);
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [staff, setStaff] = useState<UserProfile[]>([]);
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [classes, setClasses] = useState<Classroom[]>([]);
 
   // Per-row selected role for pending requests before clicking Approve
@@ -80,6 +81,20 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
     activeDomain: DOMAINS[0],
   });
   const [creatingUser, setCreatingUser] = useState<boolean>(false);
+
+  // Edit User Modal (All Users)
+  const [editUserModalOpen, setEditUserModalOpen] = useState<boolean>(false);
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [editUserForm, setEditUserForm] = useState({
+    fullName: "",
+    email: "",
+    username: "",
+    role: "student" as UserRole,
+    title: "",
+    activeDomain: DOMAINS[0],
+    password: "",
+  });
+  const [savingEditUser, setSavingEditUser] = useState<boolean>(false);
 
   // Create / Edit Class Modal
   const [classModalOpen, setClassModalOpen] = useState<boolean>(false);
@@ -127,6 +142,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
       setTeachers(Array.isArray(data.teachers) ? data.teachers : []);
       setStudents(Array.isArray(data.students) ? data.students : []);
       setStaff(Array.isArray(data.staff) ? data.staff : []);
+      setAllUsers(Array.isArray(data.allUsers) ? data.allUsers : []);
       setClasses(Array.isArray(data.classes) ? data.classes : []);
 
       const defaults: Record<string, UserRole> = {};
@@ -145,6 +161,48 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
       setLoading(false);
     }
   }, [isDeveloper, getAuthHeaders, copy.loadError]);
+
+  const openEditUserModal = (u: UserProfile) => {
+    setEditingUser(u);
+    setEditUserForm({
+      fullName: u.name || "",
+      email: u.email || "",
+      username: u.username || "",
+      role: u.role || "student",
+      title: u.title || "",
+      activeDomain: u.activeDomain || DOMAINS[0],
+      password: "",
+    });
+    setEditUserModalOpen(true);
+  };
+
+  const handleSaveEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setSavingEditUser(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch(`/api/dev/users/${encodeURIComponent(editingUser.id)}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(editUserForm),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || copy.actionError);
+        return;
+      }
+      setEditUserModalOpen(false);
+      setEditingUser(null);
+      showToast(copy.userUpdated);
+      await fetchDashboard();
+    } catch {
+      setErrorMsg(copy.actionError);
+    } finally {
+      setSavingEditUser(false);
+    }
+  };
 
   useEffect(() => {
     fetchDashboard();
@@ -347,6 +405,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
   const filteredTeachers = filterUsers(teachers);
   const filteredStudents = filterUsers(students);
   const filteredStaff = filterUsers(staff);
+  const filteredAllUsers = filterUsers(allUsers);
   const filteredClasses = classes.filter(
     (c) =>
       matchesSearch(c.title) ||
@@ -551,6 +610,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
               {(
                 [
                   { id: "all", label: copy.tabAll },
+                  { id: "users", label: `${copy.tabUsers} (${allUsers.length})` },
                   { id: "requests", label: `${copy.tabRequests} (${requests.length})` },
                   { id: "classes", label: `${copy.tabClasses} (${classes.length})` },
                   { id: "teachers", label: `${copy.tabTeachers} (${teachers.length})` },
@@ -609,6 +669,95 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
             </div>
           ) : (
             <div className="space-y-8">
+              {/* TABLE 0: ALL USERS & PASSWORDS / EDIT */}
+              {(activeView === "all" || activeView === "users") && (
+                <section className="bg-white rounded-3xl border border-slate-200/90 shadow-lg overflow-hidden">
+                  <div className="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gradient-to-r from-sky-50/70 to-white">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                        <Users className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-base sm:text-lg font-black text-[#041d37]">
+                          {copy.usersTitle}
+                        </h2>
+                        <p className="text-xs text-slate-500">{copy.usersSub}</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold self-start sm:self-center">
+                      {filteredAllUsers.length} {copy.itemsLabel}
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs sm:text-sm">
+                      <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200/80">
+                        <tr>
+                          <th className="py-3.5 px-4 text-start">{copy.colUser}</th>
+                          <th className="py-3.5 px-4 text-start">{copy.colCurrentRole}</th>
+                          <th className="py-3.5 px-4 text-start">{copy.colNoteDomain}</th>
+                          <th className="py-3.5 px-4 text-start">{copy.colPassword}</th>
+                          <th className="py-3.5 px-4 text-end">{copy.colActions}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredAllUsers.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="py-10 text-center text-slate-400 font-semibold">
+                              {copy.emptyRequests}
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredAllUsers.map((u) => {
+                            const uid = u.id || u.email;
+                            return (
+                              <tr key={uid} className="hover:bg-sky-50/30 transition-colors">
+                                <td className="py-3.5 px-4">
+                                  <div className="font-bold text-[#041d37]">
+                                    {u.name}
+                                    {u.id === profile?.id && (
+                                      <span className="ms-2 px-2 py-0.5 rounded-md bg-sky-100 text-[#1d8ccc] text-[10px] font-bold">
+                                        {copy.youLabel}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-slate-500" dir="ltr">
+                                    {u.email}
+                                    {u.username ? ` • @${u.username}` : ""}
+                                  </div>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <RoleBadge role={u.role || "guest"} copy={copy} />
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <div className="font-semibold text-slate-700">
+                                    {u.activeDomain || "—"}
+                                  </div>
+                                  <div className="text-[11px] text-slate-400">{u.title}</div>
+                                </td>
+                                <td className="py-3.5 px-4 font-mono text-slate-500 text-xs">
+                                  •••••••• (Bcrypt)
+                                </td>
+                                <td className="py-3.5 px-4 text-end">
+                                  <button
+                                    type="button"
+                                    onClick={() => openEditUserModal(u)}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-[#1d8ccc] hover:text-white text-[#041d37] text-xs font-bold transition-colors cursor-pointer"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                    <span>{copy.editBtn}</span>
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
+
               {/* TABLE 1: ASKS FOR REGISTRATIONS */}
               {(activeView === "all" || activeView === "requests") && (
                 <section className="bg-white rounded-3xl border border-slate-200/90 shadow-lg overflow-hidden">
@@ -1499,6 +1648,137 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
         </div>
       )}
 
+      {/* EDIT USER MODAL */}
+      {editUserModalOpen && editingUser && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-lg font-black text-[#041d37] flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-[#1d8ccc]" />
+                <span>{copy.editUserTitle}: {editingUser.name}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditUserModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditUser} className="space-y-3.5">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#041d37]">{copy.firstName} / {copy.colUser}</label>
+                  <input
+                    type="text"
+                    required
+                    value={editUserForm.fullName}
+                    onChange={(e) => setEditUserForm((f) => ({ ...f, fullName: e.target.value }))}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:outline-none focus:border-[#1d8ccc]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#041d37]">{copy.username}</label>
+                  <input
+                    type="text"
+                    value={editUserForm.username}
+                    onChange={(e) => setEditUserForm((f) => ({ ...f, username: e.target.value }))}
+                    dir="ltr"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-left focus:bg-white focus:outline-none focus:border-[#1d8ccc]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#041d37]">{copy.emailLabel}</label>
+                  <input
+                    type="email"
+                    required
+                    value={editUserForm.email}
+                    onChange={(e) => setEditUserForm((f) => ({ ...f, email: e.target.value }))}
+                    dir="ltr"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-left focus:bg-white focus:outline-none focus:border-[#1d8ccc]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#041d37]">{copy.colAssignRole}</label>
+                  <select
+                    value={editUserForm.role}
+                    onChange={(e) => setEditUserForm((f) => ({ ...f, role: e.target.value as UserRole }))}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-[#041d37] focus:bg-white focus:outline-none focus:border-[#1d8ccc]"
+                  >
+                    {ALL_ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {copy.roleNames[r]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#041d37]">{copy.colTitle}</label>
+                  <input
+                    type="text"
+                    value={editUserForm.title}
+                    onChange={(e) => setEditUserForm((f) => ({ ...f, title: e.target.value }))}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:outline-none focus:border-[#1d8ccc]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#041d37]">{copy.colDomain}</label>
+                  <select
+                    value={editUserForm.activeDomain}
+                    onChange={(e) => setEditUserForm((f) => ({ ...f, activeDomain: e.target.value }))}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:outline-none focus:border-[#1d8ccc]"
+                  >
+                    {DOMAINS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#041d37]">{copy.passwordLabel} (Reset)</label>
+                <input
+                  type="text"
+                  value={editUserForm.password}
+                  onChange={(e) => setEditUserForm((f) => ({ ...f, password: e.target.value }))}
+                  placeholder="••••••••"
+                  dir="ltr"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-left font-mono focus:bg-white focus:outline-none focus:border-[#1d8ccc]"
+                />
+                <p className="text-[11px] text-slate-500">{copy.newPasswordHint}</p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setEditUserModalOpen(false)}
+                  className="px-4 py-2 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  {copy.cancelBtn}
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEditUser}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1d8ccc] hover:bg-[#041d37] text-white text-xs font-bold cursor-pointer disabled:opacity-60"
+                >
+                  {savingEditUser && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{copy.saveBtn}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <LandingFooter />
     </div>
   );
@@ -1537,6 +1817,13 @@ function useDeveloperCopy(language: "fr" | "ar" | "en") {
       editClassTitle: "تعديل الفصل",
       manageStudentsTitle: "إدارة طلاب الفصل",
       tabAll: "جميع الجداول",
+      tabUsers: "جميع المستخدمين",
+      usersTitle: "جميع المستخدمين وكلمات المرور",
+      usersSub: "عرض وإدارة جميع حسابات المنصة وصلاحياتهم وكلمات المرور.",
+      colPassword: "كلمة المرور (مشفرة / إعادة تعيين)",
+      editUserTitle: "تعديل حساب المستخدم",
+      newPasswordHint: "اترك الحقل فارغاً للإبقاء على كلمة المرور الحالية أو أدخل كلمة مرور جديدة لتغييرها.",
+      userUpdated: "تم تحديث بيانات المستخدم بنجاح.",
       tabRequests: "طلبات التسجيل",
       tabClasses: "الفصول",
       tabTeachers: "الأساتذة",
@@ -1624,6 +1911,13 @@ function useDeveloperCopy(language: "fr" | "ar" | "en") {
       editClassTitle: "Edit Class",
       manageStudentsTitle: "Manage Class Students",
       tabAll: "All Tables",
+      tabUsers: "All Users",
+      usersTitle: "All Users & Passwords Directory",
+      usersSub: "View and edit all platform user accounts, roles, and credentials.",
+      colPassword: "Password (Bcrypt Hash / Reset)",
+      editUserTitle: "Edit User Account",
+      newPasswordHint: "Leave blank to keep current password or enter a new password to reset it.",
+      userUpdated: "User account updated successfully.",
       tabRequests: "Registration Requests",
       tabClasses: "Classes",
       tabTeachers: "Teachers",
@@ -1710,6 +2004,13 @@ function useDeveloperCopy(language: "fr" | "ar" | "en") {
     editClassTitle: "Modifier la classe",
     manageStudentsTitle: "Étudiants de la classe",
     tabAll: "Tous les tableaux",
+    tabUsers: "Tous les utilisateurs",
+    usersTitle: "Répertoire Global des Utilisateurs & Mots de passe",
+    usersSub: "Visualisez et modifiez l'ensemble des comptes, rôles et mots de passe.",
+    colPassword: "Mot de passe (Bcrypt / Réinitialisation)",
+    editUserTitle: "Modifier le compte utilisateur",
+    newPasswordHint: "Laissez vide pour conserver le mot de passe actuel ou entrez un nouveau mot de passe.",
+    userUpdated: "Compte utilisateur mis à jour avec succès.",
     tabRequests: "Demandes d'inscription",
     tabClasses: "Classes",
     tabTeachers: "Formateurs",

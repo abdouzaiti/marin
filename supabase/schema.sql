@@ -845,6 +845,77 @@ begin
 end;
 $$;
 
+create or replace function public.marin_dev_update_user_full(
+  p_token_hash text,
+  p_target_user_id uuid,
+  p_full_name text default null,
+  p_email text default null,
+  p_username text default null,
+  p_role text default null,
+  p_title text default null,
+  p_active_domain text default null,
+  p_new_password text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_caller_id uuid;
+  v_caller_role text;
+  v_profile public.profiles;
+  v_email text;
+  v_username text;
+  v_role text;
+begin
+  v_caller_id := public._resolve_session_profile_id(p_token_hash);
+  if v_caller_id is null then
+    raise exception 'UNAUTHORIZED';
+  end if;
+
+  select role into v_caller_role from public.profiles where id = v_caller_id;
+  if v_caller_role <> 'developer' then
+    raise exception 'FORBIDDEN';
+  end if;
+
+  select * into v_profile from public.profiles where id = p_target_user_id;
+  if not found then
+    raise exception 'USER_NOT_FOUND';
+  end if;
+
+  v_email := coalesce(nullif(lower(trim(p_email)), ''), v_profile.email);
+  v_username := nullif(trim(coalesce(p_username, v_profile.username)), '');
+  v_role := case when p_role in ('guest', 'student', 'teacher', 'admin', 'developer') then p_role else v_profile.role end;
+
+  if v_email <> v_profile.email and exists (select 1 from public.profiles where lower(email) = v_email and id <> p_target_user_id) then
+    raise exception 'EMAIL_EXISTS';
+  end if;
+
+  if v_username is not null and v_username <> coalesce(v_profile.username, '') and exists (select 1 from public.profiles where lower(username) = lower(v_username) and id <> p_target_user_id) then
+    raise exception 'USERNAME_EXISTS';
+  end if;
+
+  update public.profiles
+  set
+    email = v_email,
+    username = v_username,
+    full_name = coalesce(nullif(trim(p_full_name), ''), full_name),
+    role = v_role,
+    title = coalesce(nullif(trim(p_title), ''), title),
+    active_domain = case when p_active_domain is not null then nullif(trim(p_active_domain), '') else active_domain end,
+    password_hash = case 
+      when p_new_password is not null and trim(p_new_password) <> '' then crypt(p_new_password, gen_salt('bf', 10))
+      else password_hash
+    end,
+    updated_at = now()
+  where id = p_target_user_id
+  returning * into v_profile;
+
+  return public._profile_to_json(v_profile);
+end;
+$$;
+
 grant execute on function public.marin_register_profile(text, text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.marin_login_profile(text, text, text) to anon, authenticated;
 grant execute on function public.marin_get_session(text) to anon, authenticated;
@@ -855,6 +926,7 @@ grant execute on function public.marin_complete_module(text, text) to anon, auth
 grant execute on function public.marin_dev_dashboard(text) to anon, authenticated;
 grant execute on function public.marin_dev_create_user(text, text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.marin_dev_set_user_role(text, uuid, text, text) to anon, authenticated;
+grant execute on function public.marin_dev_update_user_full(text, uuid, text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.marin_dev_create_class(text, text, text, uuid, text, integer, text) to anon, authenticated;
 grant execute on function public.marin_dev_update_class(text, uuid, text, text, uuid, boolean, text, integer, text) to anon, authenticated;
 grant execute on function public.marin_dev_delete_class(text, uuid) to anon, authenticated;
