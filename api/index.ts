@@ -4,7 +4,17 @@ import crypto from "node:crypto";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { broadcastRealtimeEvent } from "./realtime";
+
+function broadcastRealtimeEvent(event: Record<string, unknown>) {
+  try {
+    const fn = (globalThis as any).__marinBroadcastRealtime;
+    if (typeof fn === "function") {
+      fn(event);
+    }
+  } catch {
+    // ignore realtime broadcast failure in stateless serverless environments
+  }
+}
 
 try {
   dotenv.config();

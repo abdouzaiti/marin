@@ -112,7 +112,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         event.type === "access:requested" ||
         event.type === "class:created" ||
         event.type === "class:updated" ||
-        event.type === "class:deleted"
+        event.type === "class:deleted" ||
+        event.type === "poll:tick"
       ) {
         // Refresh quietly in real-time
         fetchStudentClasses(true);

@@ -3,7 +3,7 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { app } from "./api/index";
-import { initRealtime } from "./api/realtime";
+import { initRealtime } from "./realtime";
 
 const PORT = 3000;
 

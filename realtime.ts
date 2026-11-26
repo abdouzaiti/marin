@@ -23,6 +23,8 @@ export interface RealtimeEvent {
 let wss: WebSocketServer | null = null;
 
 export function initRealtime(server: Server): WebSocketServer {
+  (globalThis as any).__marinBroadcastRealtime = broadcastRealtimeEvent;
+
   if (wss) {
     return wss;
   }

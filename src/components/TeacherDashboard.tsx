@@ -133,7 +133,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         event.type === "class:created" ||
         event.type === "class:updated" ||
         event.type === "class:deleted" ||
-        event.type === "enrollments:updated"
+        event.type === "enrollments:updated" ||
+        event.type === "poll:tick"
       ) {
         fetchTeacherData(true);
       }

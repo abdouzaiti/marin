@@ -21,11 +21,33 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
   const [lastEvent, setLastEvent] = useState<RealtimeEvent | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
+  const pollIntervalRef = useRef<any>(null);
+  const failedAttemptsRef = useRef<number>(0);
   const onEventRef = useRef(onEvent);
 
   useEffect(() => {
     onEventRef.current = onEvent;
   }, [onEvent]);
+
+  const stopPolling = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  }, []);
+
+  const startPollingFallback = useCallback(() => {
+    if (pollIntervalRef.current || !enabled) return;
+    pollIntervalRef.current = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      const tickEvent: RealtimeEvent = {
+        type: "poll:tick",
+        timestamp: new Date().toISOString(),
+      };
+      setLastEvent(tickEvent);
+      onEventRef.current?.(tickEvent);
+    }, 6000);
+  }, [enabled]);
 
   const connect = useCallback(() => {
     if (!enabled || typeof window === "undefined") return;
@@ -41,7 +63,9 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
       wsRef.current = ws;
 
       ws.onopen = () => {
+        failedAttemptsRef.current = 0;
         setIsConnected(true);
+        stopPolling();
       };
 
       ws.onmessage = (event) => {
@@ -57,8 +81,14 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
       ws.onclose = () => {
         setIsConnected(false);
         wsRef.current = null;
-        // Exponential / friendly reconnect
-        if (enabled) {
+        failedAttemptsRef.current += 1;
+
+        if (!enabled) return;
+
+        // If WebSocket is unavailable (e.g. serverless hosting like Vercel), fall back to silent polling
+        if (failedAttemptsRef.current >= 2) {
+          startPollingFallback();
+        } else {
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, 3000);
@@ -70,8 +100,9 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
       };
     } catch {
       setIsConnected(false);
+      startPollingFallback();
     }
-  }, [enabled]);
+  }, [enabled, startPollingFallback, stopPolling]);
 
   useEffect(() => {
     connect();
@@ -85,6 +116,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
 
     return () => {
       clearInterval(pingInterval);
+      stopPolling();
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
@@ -93,7 +125,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
         wsRef.current = null;
       }
     };
-  }, [connect]);
+  }, [connect, stopPolling]);
 
   return { isConnected, lastEvent };
 }
