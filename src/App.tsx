@@ -10,6 +10,8 @@ import { AiSimulationLab } from "./components/AiSimulationLab";
 import { CareerAdvisorView } from "./components/CareerAdvisorView";
 import { UserProfileView } from "./components/UserProfileView";
 import { DeveloperDashboard } from "./components/DeveloperDashboard";
+import { TeacherDashboard } from "./components/TeacherDashboard";
+import { StudentDashboard } from "./components/StudentDashboard";
 import { AuthPage } from "./components/AuthPage";
 import { VIDEO_COURSES, VideoCourse } from "./data/videoCourses";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
@@ -177,6 +179,24 @@ function MainApp() {
                 courses={courses}
                 selectCourse={handleSelectCourse}
                 setActiveTab={setActiveTab}
+              />
+            </div>
+          )}
+
+          {activeTab === "teacher" && (
+            <div className="flex-1 overflow-y-auto">
+              <TeacherDashboard
+                onBackToHome={() => setActiveTab("home")}
+                onExploreCourses={() => setActiveTab("academy")}
+              />
+            </div>
+          )}
+
+          {(activeTab === "classes" || activeTab === "student-dashboard") && (
+            <div className="flex-1 overflow-y-auto">
+              <StudentDashboard
+                onBackToHome={() => setActiveTab("home")}
+                onExploreCourses={() => setActiveTab("academy")}
               />
             </div>
           )}

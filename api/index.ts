@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { broadcastRealtimeEvent } from "./realtime";
 
 try {
   dotenv.config();
@@ -298,6 +299,24 @@ function mapRpcError(rawMessage?: string): { status: number; message: string } {
   if (msg.includes("ALREADY_ASSIGNED_ROLE")) {
     return { status: 400, message: "Votre compte possède déjà un rôle attribué." };
   }
+  if (msg.includes("TEACHER_ACCESS_REQUIRED")) {
+    return {
+      status: 403,
+      message: "Accès réservé exclusivement aux formateurs et développeurs.",
+    };
+  }
+  if (msg.includes("NOT_CLASS_TEACHER")) {
+    return {
+      status: 403,
+      message: "Vous n'êtes pas l'enseignant assigné à cette classe.",
+    };
+  }
+  if (msg.includes("CLASS_NOT_FOUND")) {
+    return { status: 404, message: "Classe introuvable." };
+  }
+  if (msg.includes("CLASS_NOT_ACTIVE")) {
+    return { status: 400, message: "Cette classe n'est pas active actuellement." };
+  }
   if (msg.includes("USER_NOT_FOUND")) {
     return { status: 404, message: "Utilisateur introuvable." };
   }
@@ -364,6 +383,16 @@ async function requireDeveloperAuth(req: AuthedRequest, res: Response, next: Nex
   if (!req.callerProfile || normalizeRole(req.callerProfile.role) !== "developer") {
     return res.status(403).json({
       error: "Accès réservé exclusivement au rôle Développeur.",
+    });
+  }
+  next();
+}
+
+async function requireTeacherAuth(req: AuthedRequest, res: Response, next: NextFunction) {
+  const role = normalizeRole(req.callerProfile?.role);
+  if (role !== "teacher" && role !== "developer") {
+    return res.status(403).json({
+      error: "Accès réservé exclusivement aux formateurs et développeurs.",
     });
   }
   next();
@@ -1240,6 +1269,323 @@ app.put(
     } catch (err) {
       console.error("Update enrollments error:", err);
       return res.status(500).json({ error: "Erreur lors de la mise à jour des inscriptions." });
+    }
+  }
+);
+
+// ============================================================================
+// Teacher Class Management & Student Access Control Routes
+// ============================================================================
+
+app.get(
+  "/api/teacher/dashboard",
+  requireSupabaseAuth,
+  requireTeacherAuth,
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const { data, error } = await req.supabaseClient!.rpc("marin_teacher_dashboard", {
+        p_token_hash: req.tokenHash!,
+      });
+
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
+      }
+
+      return res.json(data);
+    } catch (err) {
+      console.error("Teacher dashboard load error:", err);
+      return res.status(500).json({ error: "Erreur lors du chargement de l'espace formateur." });
+    }
+  }
+);
+
+app.post(
+  "/api/teacher/classes",
+  requireCsrfSafe,
+  requireSupabaseAuth,
+  requireTeacherAuth,
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const { title, domain, schedule, capacity, status, description } = req.body || {};
+      if (typeof title !== "string" || title.trim().length < 2 || title.trim().length > 140) {
+        return res.status(400).json({ error: "Nom de classe invalide (2 à 140 caractères)." });
+      }
+      const cleanDomain =
+        typeof domain === "string" && domain.trim()
+          ? domain.trim().slice(0, 120)
+          : "المالية الذكية";
+      const cleanSchedule =
+        typeof schedule === "string" ? schedule.trim().slice(0, 140) : "";
+      const cleanCapacity =
+        typeof capacity === "number" && capacity >= 1 && capacity <= 500
+          ? Math.floor(capacity)
+          : 30;
+      const cleanStatus = ["active", "draft", "archived"].includes(status)
+        ? status
+        : "active";
+      const cleanDescription =
+        typeof description === "string" ? description.trim().slice(0, 2000) : "";
+
+      const { data, error } = await req.supabaseClient!.rpc("marin_teacher_create_class", {
+        p_token_hash: req.tokenHash!,
+        p_title: title.trim(),
+        p_domain: cleanDomain,
+        p_schedule: cleanSchedule,
+        p_capacity: cleanCapacity,
+        p_status: cleanStatus,
+        p_description: cleanDescription,
+      });
+
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
+      }
+
+      broadcastRealtimeEvent({
+        type: "class:created",
+        classId: data.id,
+        teacherId: req.callerProfile?.id,
+      });
+
+      return res.status(201).json({ class: data });
+    } catch (err) {
+      console.error("Teacher create class error:", err);
+      return res.status(500).json({ error: "Erreur lors de la création de la classe." });
+    }
+  }
+);
+
+app.put(
+  "/api/teacher/classes/:classId",
+  requireCsrfSafe,
+  requireSupabaseAuth,
+  requireTeacherAuth,
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const { classId } = req.params;
+      if (!classId || !VALID_UUID_REGEX.test(classId)) {
+        return res.status(400).json({ error: "Identifiant de classe invalide." });
+      }
+
+      const { title, domain, schedule, capacity, status, description } = req.body || {};
+
+      const { data, error } = await req.supabaseClient!.rpc("marin_teacher_update_class", {
+        p_token_hash: req.tokenHash!,
+        p_class_id: classId,
+        p_title: typeof title === "string" && title.trim() ? title.trim().slice(0, 140) : null,
+        p_domain: typeof domain === "string" && domain.trim() ? domain.trim().slice(0, 120) : null,
+        p_schedule: typeof schedule === "string" ? schedule.trim().slice(0, 140) : null,
+        p_capacity: typeof capacity === "number" ? Math.floor(capacity) : null,
+        p_status: ["active", "draft", "archived"].includes(status) ? status : null,
+        p_description: typeof description === "string" ? description.trim().slice(0, 2000) : null,
+      });
+
+      if (error || !data) {
+        const mapped = mapRpcError(error?.message);
+        return res.status(mapped.status).json({ error: mapped.message });
+      }
+
+      broadcastRealtimeEvent({
+        type: "class:updated",
+        classId,
+        teacherId: req.callerProfile?.id,
+      });
+
+      return res.json({ class: data });
+    } catch (err) {
+      console.error("Teacher update class error:", err);
+      return res.status(500).json({ error: "Erreur lors de la modification de la classe." });
+    }
+  }
+);
+
+app.delete(
+  "/api/teacher/classes/:classId",
+  requireCsrfSafe,
+  requireSupabaseAuth,
+  requireTeacherAuth,
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const { classId } = req.params;
+      if (!classId || !VALID_UUID_REGEX.test(classId)) {
+        return res.status(400).json({ error: "Identifiant de classe invalide." });
+      }
+
+      const { error } = await req.supabaseClient!.rpc("marin_teacher_delete_class", {
+        p_token_hash: req.tokenHash!,
+        p_class_id: classId,
+      });
+
+      if (error) {
+        const mapped = mapRpcError(error.message);
+        return res.status(mapped.status).json({ error: mapped.message });
+      }
+
+      broadcastRealtimeEvent({
+        type: "class:deleted",
+        classId,
+        teacherId: req.callerProfile?.id,
+      });
+
+      return res.json({ ok: true, classId });
+    } catch (err) {
+      console.error("Teacher delete class error:", err);
+      return res.status(500).json({ error: "Erreur lors de la suppression de la classe." });
+    }
+  }
+);
+
+app.post(
+  "/api/teacher/classes/:classId/access",
+  requireCsrfSafe,
+  requireSupabaseAuth,
+  requireTeacherAuth,
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const { classId } = req.params;
+      const { studentId, decision } = req.body || {};
+
+      if (!classId || !VALID_UUID_REGEX.test(classId)) {
+        return res.status(400).json({ error: "Identifiant de classe invalide." });
+      }
+      if (!studentId || !VALID_UUID_REGEX.test(studentId)) {
+        return res.status(400).json({ error: "Identifiant étudiant invalide." });
+      }
+      if (!["approved", "rejected", "removed"].includes(decision)) {
+        return res.status(400).json({ error: "Décision invalide (approved, rejected, removed)." });
+      }
+
+      const { data, error } = await req.supabaseClient!.rpc("marin_teacher_set_student_access", {
+        p_token_hash: req.tokenHash!,
+        p_class_id: classId,
+        p_student_id: studentId,
+        p_decision: decision,
+      });
+
+      if (error) {
+        const mapped = mapRpcError(error.message);
+        return res.status(mapped.status).json({ error: mapped.message });
+      }
+
+      broadcastRealtimeEvent({
+        type: "access:decided",
+        classId,
+        studentId,
+        teacherId: req.callerProfile?.id,
+        decision,
+      });
+
+      return res.json({ ok: true, access: data });
+    } catch (err) {
+      console.error("Teacher set student access error:", err);
+      return res.status(500).json({ error: "Erreur lors de la décision d'accès." });
+    }
+  }
+);
+
+// ============================================================================
+// Student Real Classes & Access Request Routes
+// ============================================================================
+
+app.get(
+  "/api/student/classes",
+  async (req: Request, res: Response) => {
+    try {
+      const token = extractAccessToken(req);
+      const tokenHash = token ? hashSessionToken(token) : null;
+      const supabase = createSupabaseAnonClient();
+
+      const { data, error } = await supabase.rpc("marin_student_classes_dashboard", {
+        p_token_hash: tokenHash || "",
+      });
+
+      if (error) {
+        const mapped = mapRpcError(error.message);
+        return res.status(mapped.status).json({ error: mapped.message });
+      }
+
+      return res.json(data || { classes: [], myClasses: [] });
+    } catch (err) {
+      console.error("Student classes load error:", err);
+      return res.status(500).json({ error: "Erreur lors du chargement des classes." });
+    }
+  }
+);
+
+app.post(
+  "/api/student/classes/:classId/request-access",
+  requireCsrfSafe,
+  requireSupabaseAuth,
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const { classId } = req.params;
+      const { message } = req.body || {};
+
+      if (!classId || !VALID_UUID_REGEX.test(classId)) {
+        return res.status(400).json({ error: "Identifiant de classe invalide." });
+      }
+
+      const cleanMessage =
+        typeof message === "string" ? message.trim().slice(0, 500) : "";
+
+      const { data, error } = await req.supabaseClient!.rpc("marin_student_request_access", {
+        p_token_hash: req.tokenHash!,
+        p_class_id: classId,
+        p_message: cleanMessage,
+      });
+
+      if (error) {
+        const mapped = mapRpcError(error.message);
+        return res.status(mapped.status).json({ error: mapped.message });
+      }
+
+      broadcastRealtimeEvent({
+        type: "access:requested",
+        classId,
+        studentId: req.callerProfile?.id,
+      });
+
+      return res.json({ ok: true, request: data });
+    } catch (err) {
+      console.error("Student request access error:", err);
+      return res.status(500).json({ error: "Erreur lors de la demande d'accès." });
+    }
+  }
+);
+
+app.delete(
+  "/api/student/classes/:classId/request-access",
+  requireCsrfSafe,
+  requireSupabaseAuth,
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const { classId } = req.params;
+      if (!classId || !VALID_UUID_REGEX.test(classId)) {
+        return res.status(400).json({ error: "Identifiant de classe invalide." });
+      }
+
+      const { error } = await req.supabaseClient!.rpc("marin_student_cancel_request", {
+        p_token_hash: req.tokenHash!,
+        p_class_id: classId,
+      });
+
+      if (error) {
+        const mapped = mapRpcError(error.message);
+        return res.status(mapped.status).json({ error: mapped.message });
+      }
+
+      broadcastRealtimeEvent({
+        type: "access:decided",
+        classId,
+        studentId: req.callerProfile?.id,
+        decision: "cancelled",
+      });
+
+      return res.json({ ok: true, cancelled: true });
+    } catch (err) {
+      console.error("Student cancel request error:", err);
+      return res.status(500).json({ error: "Erreur lors de l'annulation de la demande." });
     }
   }
 );

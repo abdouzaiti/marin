@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, GraduationCap, Compass, User, ShieldCheck } from "lucide-react";
+import { Home, GraduationCap, Compass, User, ShieldCheck, BookOpen } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 
@@ -16,7 +16,7 @@ export const YouTubeBottomNav: React.FC<YouTubeBottomNavProps> = ({
   setSelectedCategory,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const { isDeveloper } = useAuth();
+  const { isDeveloper, profile } = useAuth();
   const { language } = useLanguage();
 
   useEffect(() => {
@@ -80,6 +80,27 @@ export const YouTubeBottomNav: React.FC<YouTubeBottomNavProps> = ({
         <span>{language === "ar" ? "الأكاديمية" : language === "en" ? "Academy" : "Académie"}</span>
       </button>
 
+      <button
+        onClick={() => {
+          setActiveTab("classes");
+          setSelectedCategory("Tout");
+        }}
+        className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors cursor-pointer ${
+          activeTab === "classes" || activeTab === "student-dashboard"
+            ? "text-[#1d8ccc] font-bold"
+            : "text-slate-600 hover:text-slate-900"
+        }`}
+      >
+        <BookOpen
+          className={`w-5 h-5 mb-0.5 ${
+            activeTab === "classes" || activeTab === "student-dashboard"
+              ? "text-[#1d8ccc] stroke-[2.5]"
+              : "text-slate-600"
+          }`}
+        />
+        <span>{language === "ar" ? "الفصول" : language === "en" ? "Classes" : "Classes"}</span>
+      </button>
+
       {isDeveloper ? (
         <button
           onClick={() => setActiveTab("developer")}
@@ -96,23 +117,23 @@ export const YouTubeBottomNav: React.FC<YouTubeBottomNavProps> = ({
           />
           <span>{language === "ar" ? "المطور" : "Dev"}</span>
         </button>
-      ) : (
+      ) : profile.role === "teacher" ? (
         <button
-          onClick={() => setActiveTab("explore")}
+          onClick={() => setActiveTab("teacher")}
           className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors cursor-pointer ${
-            activeTab === "explore"
-              ? "text-[#1d8ccc] font-bold"
+            activeTab === "teacher"
+              ? "text-emerald-600 font-bold"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          <Compass
+          <GraduationCap
             className={`w-5 h-5 mb-0.5 ${
-              activeTab === "explore" ? "text-[#1d8ccc] stroke-[2.5]" : "text-slate-600"
+              activeTab === "teacher" ? "text-emerald-600 stroke-[2.5]" : "text-slate-600"
             }`}
           />
-          <span>{language === "ar" ? "استكشاف" : language === "en" ? "Explore" : "Explorer"}</span>
+          <span>{language === "ar" ? "الأستاذ" : "Prof"}</span>
         </button>
-      )}
+      ) : null}
 
       <button
         onClick={() => setActiveTab("profile")}

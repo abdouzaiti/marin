@@ -101,6 +101,7 @@ create table if not exists public.classes (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   domain text not null default 'المالية الذكية',
+  description text not null default '',
   teacher_id uuid references public.profiles(id) on delete set null,
   schedule text not null default '',
   capacity integer not null default 30,
@@ -110,14 +111,24 @@ create table if not exists public.classes (
   updated_at timestamptz not null default now()
 );
 
+alter table public.classes add column if not exists description text not null default '';
+
 -- 4. Class Enrollments Table (Students <-> Classes)
 create table if not exists public.class_enrollments (
   id uuid primary key default gen_random_uuid(),
   class_id uuid not null references public.classes(id) on delete cascade,
   student_id uuid not null references public.profiles(id) on delete cascade,
+  status text not null default 'approved'
+    check (status in ('pending', 'approved', 'rejected')),
+  request_message text default '',
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   unique (class_id, student_id)
 );
+
+alter table public.class_enrollments add column if not exists status text not null default 'approved' check (status in ('pending', 'approved', 'rejected'));
+alter table public.class_enrollments add column if not exists request_message text default '';
+alter table public.class_enrollments add column if not exists updated_at timestamptz not null default now();
 
 -- 5. Lock down direct table access via RLS (only SECURITY DEFINER RPCs mutate/read)
 alter table public.profiles enable row level security;
@@ -941,6 +952,477 @@ begin
 end;
 $$;
 
+-- ============================================================================
+-- 9. Teacher Dashboard & Student Access Control RPCs
+-- ============================================================================
+
+create or replace function public.marin_teacher_dashboard(p_token_hash text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_caller_id uuid;
+  v_caller_role text;
+  v_teacher jsonb;
+  v_classes jsonb;
+  v_requests jsonb;
+  v_enrolled jsonb;
+begin
+  v_caller_id := public._resolve_session_profile_id(p_token_hash);
+  if v_caller_id is null then
+    raise exception 'UNAUTHORIZED';
+  end if;
+
+  select role into v_caller_role from public.profiles where id = v_caller_id;
+  if v_caller_role <> 'teacher' and v_caller_role <> 'developer' then
+    raise exception 'TEACHER_ACCESS_REQUIRED';
+  end if;
+
+  select public._profile_to_json(p) into v_teacher from public.profiles p where p.id = v_caller_id;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'id', c.id,
+    'title', c.title,
+    'domain', c.domain,
+    'description', c.description,
+    'teacher_id', c.teacher_id,
+    'schedule', c.schedule,
+    'capacity', c.capacity,
+    'status', c.status,
+    'created_at', c.created_at,
+    'student_count', (select count(*) from public.class_enrollments e where e.class_id = c.id and e.status = 'approved'),
+    'pending_count', (select count(*) from public.class_enrollments e where e.class_id = c.id and e.status = 'pending')
+  ) order by c.created_at desc), '[]'::jsonb)
+  into v_classes
+  from public.classes c
+  where (v_caller_role = 'developer' or c.teacher_id = v_caller_id);
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'id', e.id,
+    'class_id', e.class_id,
+    'class_title', c.title,
+    'class_domain', c.domain,
+    'student_id', s.id,
+    'student_name', s.full_name,
+    'student_email', s.email,
+    'student_title', s.title,
+    'student_domain', s.active_domain,
+    'student_xp', s.xp,
+    'message', e.request_message,
+    'status', e.status,
+    'created_at', e.created_at,
+    'updated_at', e.updated_at
+  ) order by e.created_at desc), '[]'::jsonb)
+  into v_requests
+  from public.class_enrollments e
+  join public.classes c on c.id = e.class_id
+  join public.profiles s on s.id = e.student_id
+  where (v_caller_role = 'developer' or c.teacher_id = v_caller_id)
+    and e.status = 'pending';
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'id', e.id,
+    'class_id', e.class_id,
+    'class_title', c.title,
+    'student_id', s.id,
+    'student_name', s.full_name,
+    'student_email', s.email,
+    'student_title', s.title,
+    'student_domain', s.active_domain,
+    'student_xp', s.xp,
+    'status', e.status,
+    'enrolled_at', e.created_at
+  ) order by s.full_name asc), '[]'::jsonb)
+  into v_enrolled
+  from public.class_enrollments e
+  join public.classes c on c.id = e.class_id
+  join public.profiles s on s.id = e.student_id
+  where (v_caller_role = 'developer' or c.teacher_id = v_caller_id)
+    and e.status = 'approved';
+
+  return jsonb_build_object(
+    'teacher', v_teacher,
+    'classes', v_classes,
+    'requests', v_requests,
+    'enrolledStudents', v_enrolled
+  );
+end;
+$$;
+
+create or replace function public.marin_teacher_create_class(
+  p_token_hash text,
+  p_title text,
+  p_domain text default 'المالية الذكية',
+  p_schedule text default '',
+  p_capacity integer default 30,
+  p_status text default 'active',
+  p_description text default ''
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_caller_id uuid;
+  v_caller_role text;
+  v_class public.classes;
+begin
+  v_caller_id := public._resolve_session_profile_id(p_token_hash);
+  if v_caller_id is null then
+    raise exception 'UNAUTHORIZED';
+  end if;
+
+  select role into v_caller_role from public.profiles where id = v_caller_id;
+  if v_caller_role <> 'teacher' and v_caller_role <> 'developer' then
+    raise exception 'TEACHER_ACCESS_REQUIRED';
+  end if;
+
+  insert into public.classes (title, domain, description, teacher_id, schedule, capacity, status)
+  values (
+    trim(p_title),
+    coalesce(nullif(trim(coalesce(p_domain, '')), ''), 'المالية الذكية'),
+    trim(coalesce(p_description, '')),
+    v_caller_id,
+    trim(coalesce(p_schedule, '')),
+    greatest(1, least(coalesce(p_capacity, 30), 500)),
+    case when p_status in ('active', 'draft', 'archived') then p_status else 'active' end
+  )
+  returning * into v_class;
+
+  return jsonb_build_object(
+    'id', v_class.id,
+    'title', v_class.title,
+    'domain', v_class.domain,
+    'description', v_class.description,
+    'teacher_id', v_class.teacher_id,
+    'schedule', v_class.schedule,
+    'capacity', v_class.capacity,
+    'status', v_class.status,
+    'created_at', v_class.created_at,
+    'student_count', 0,
+    'pending_count', 0
+  );
+end;
+$$;
+
+create or replace function public.marin_teacher_update_class(
+  p_token_hash text,
+  p_class_id uuid,
+  p_title text default null,
+  p_domain text default null,
+  p_schedule text default null,
+  p_capacity integer default null,
+  p_status text default null,
+  p_description text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_caller_id uuid;
+  v_caller_role text;
+  v_class public.classes;
+begin
+  v_caller_id := public._resolve_session_profile_id(p_token_hash);
+  if v_caller_id is null then
+    raise exception 'UNAUTHORIZED';
+  end if;
+
+  select role into v_caller_role from public.profiles where id = v_caller_id;
+  if v_caller_role <> 'teacher' and v_caller_role <> 'developer' then
+    raise exception 'TEACHER_ACCESS_REQUIRED';
+  end if;
+
+  select * into v_class from public.classes where id = p_class_id;
+  if not found then
+    raise exception 'CLASS_NOT_FOUND';
+  end if;
+
+  if v_caller_role <> 'developer' and v_class.teacher_id <> v_caller_id then
+    raise exception 'NOT_CLASS_TEACHER';
+  end if;
+
+  update public.classes
+  set
+    title = coalesce(nullif(trim(p_title), ''), title),
+    domain = coalesce(nullif(trim(p_domain), ''), domain),
+    schedule = coalesce(nullif(trim(p_schedule), ''), schedule),
+    capacity = case when p_capacity is not null then greatest(1, least(p_capacity, 500)) else capacity end,
+    status = case when p_status in ('active', 'draft', 'archived') then p_status else status end,
+    description = case when p_description is not null then trim(p_description) else description end,
+    updated_at = now()
+  where id = p_class_id
+  returning * into v_class;
+
+  return jsonb_build_object(
+    'id', v_class.id,
+    'title', v_class.title,
+    'domain', v_class.domain,
+    'description', v_class.description,
+    'teacher_id', v_class.teacher_id,
+    'schedule', v_class.schedule,
+    'capacity', v_class.capacity,
+    'status', v_class.status,
+    'created_at', v_class.created_at,
+    'student_count', (select count(*) from public.class_enrollments where class_id = v_class.id and status = 'approved'),
+    'pending_count', (select count(*) from public.class_enrollments where class_id = v_class.id and status = 'pending')
+  );
+end;
+$$;
+
+create or replace function public.marin_teacher_delete_class(
+  p_token_hash text,
+  p_class_id uuid
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_caller_id uuid;
+  v_caller_role text;
+  v_class public.classes;
+begin
+  v_caller_id := public._resolve_session_profile_id(p_token_hash);
+  if v_caller_id is null then
+    raise exception 'UNAUTHORIZED';
+  end if;
+
+  select role into v_caller_role from public.profiles where id = v_caller_id;
+  if v_caller_role <> 'teacher' and v_caller_role <> 'developer' then
+    raise exception 'TEACHER_ACCESS_REQUIRED';
+  end if;
+
+  select * into v_class from public.classes where id = p_class_id;
+  if not found then
+    raise exception 'CLASS_NOT_FOUND';
+  end if;
+
+  if v_caller_role <> 'developer' and v_class.teacher_id <> v_caller_id then
+    raise exception 'NOT_CLASS_TEACHER';
+  end if;
+
+  delete from public.classes where id = p_class_id;
+  return true;
+end;
+$$;
+
+create or replace function public.marin_teacher_set_student_access(
+  p_token_hash text,
+  p_class_id uuid,
+  p_student_id uuid,
+  p_decision text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_caller_id uuid;
+  v_caller_role text;
+  v_class public.classes;
+begin
+  v_caller_id := public._resolve_session_profile_id(p_token_hash);
+  if v_caller_id is null then
+    raise exception 'UNAUTHORIZED';
+  end if;
+
+  select role into v_caller_role from public.profiles where id = v_caller_id;
+  if v_caller_role <> 'teacher' and v_caller_role <> 'developer' then
+    raise exception 'TEACHER_ACCESS_REQUIRED';
+  end if;
+
+  select * into v_class from public.classes where id = p_class_id;
+  if not found then
+    raise exception 'CLASS_NOT_FOUND';
+  end if;
+
+  if v_caller_role <> 'developer' and v_class.teacher_id <> v_caller_id then
+    raise exception 'NOT_CLASS_TEACHER';
+  end if;
+
+  if p_decision = 'removed' then
+    delete from public.class_enrollments
+    where class_id = p_class_id and student_id = p_student_id;
+  elsif p_decision in ('approved', 'rejected') then
+    insert into public.class_enrollments (class_id, student_id, status, updated_at)
+    values (p_class_id, p_student_id, p_decision, now())
+    on conflict (class_id, student_id)
+    do update set status = p_decision, updated_at = now();
+  else
+    raise exception 'INVALID_DECISION';
+  end if;
+
+  return jsonb_build_object(
+    'class_id', p_class_id,
+    'student_id', p_student_id,
+    'status', p_decision
+  );
+end;
+$$;
+
+-- ============================================================================
+-- 10. Student Classes & Real-Time Access Requests RPCs
+-- ============================================================================
+
+create or replace function public.marin_student_classes_dashboard(p_token_hash text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_caller_id uuid;
+  v_classes jsonb;
+  v_my_enrolled jsonb;
+begin
+  v_caller_id := public._resolve_session_profile_id(p_token_hash);
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'id', c.id,
+    'title', c.title,
+    'domain', c.domain,
+    'description', c.description,
+    'teacher_id', c.teacher_id,
+    'teacher_name', coalesce(t.full_name, 'Professeur MARIN'),
+    'teacher_email', coalesce(t.email, ''),
+    'teacher_title', coalesce(t.title, 'Formateur Expert'),
+    'schedule', c.schedule,
+    'capacity', c.capacity,
+    'status', c.status,
+    'created_at', c.created_at,
+    'student_count', (select count(*) from public.class_enrollments e where e.class_id = c.id and e.status = 'approved'),
+    'access_status', (
+      case 
+        when v_caller_id is null then 'none'
+        else coalesce((select e.status from public.class_enrollments e where e.class_id = c.id and e.student_id = v_caller_id limit 1), 'none')
+      end
+    ),
+    'access_message', (
+      case 
+        when v_caller_id is null then ''
+        else coalesce((select e.request_message from public.class_enrollments e where e.class_id = c.id and e.student_id = v_caller_id limit 1), '')
+      end
+    )
+  ) order by c.created_at desc), '[]'::jsonb)
+  into v_classes
+  from public.classes c
+  left join public.profiles t on t.id = c.teacher_id
+  where c.status = 'active';
+
+  if v_caller_id is not null then
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'id', c.id,
+      'title', c.title,
+      'domain', c.domain,
+      'description', c.description,
+      'teacher_id', c.teacher_id,
+      'teacher_name', coalesce(t.full_name, 'Professeur MARIN'),
+      'teacher_email', coalesce(t.email, ''),
+      'teacher_title', coalesce(t.title, 'Formateur Expert'),
+      'schedule', c.schedule,
+      'capacity', c.capacity,
+      'status', c.status,
+      'created_at', c.created_at,
+      'enrolled_at', e.created_at,
+      'student_count', (select count(*) from public.class_enrollments e2 where e2.class_id = c.id and e2.status = 'approved')
+    ) order by e.created_at desc), '[]'::jsonb)
+    into v_my_enrolled
+    from public.class_enrollments e
+    join public.classes c on c.id = e.class_id
+    left join public.profiles t on t.id = c.teacher_id
+    where e.student_id = v_caller_id and e.status = 'approved';
+  else
+    v_my_enrolled := '[]'::jsonb;
+  end if;
+
+  return jsonb_build_object(
+    'classes', v_classes,
+    'myClasses', v_my_enrolled
+  );
+end;
+$$;
+
+create or replace function public.marin_student_request_access(
+  p_token_hash text,
+  p_class_id uuid,
+  p_message text default ''
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_caller_id uuid;
+  v_class public.classes;
+  v_enrollment public.class_enrollments;
+begin
+  v_caller_id := public._resolve_session_profile_id(p_token_hash);
+  if v_caller_id is null then
+    raise exception 'UNAUTHORIZED';
+  end if;
+
+  select * into v_class from public.classes where id = p_class_id;
+  if not found then
+    raise exception 'CLASS_NOT_FOUND';
+  end if;
+
+  if v_class.status <> 'active' then
+    raise exception 'CLASS_NOT_ACTIVE';
+  end if;
+
+  insert into public.class_enrollments (class_id, student_id, status, request_message, updated_at)
+  values (p_class_id, v_caller_id, 'pending', trim(coalesce(p_message, '')), now())
+  on conflict (class_id, student_id)
+  do update set status = 'pending', request_message = trim(coalesce(p_message, '')), updated_at = now()
+  returning * into v_enrollment;
+
+  return jsonb_build_object(
+    'class_id', v_enrollment.class_id,
+    'student_id', v_enrollment.student_id,
+    'status', v_enrollment.status,
+    'message', v_enrollment.request_message,
+    'updated_at', v_enrollment.updated_at
+  );
+end;
+$$;
+
+create or replace function public.marin_student_cancel_request(
+  p_token_hash text,
+  p_class_id uuid
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_caller_id uuid;
+begin
+  v_caller_id := public._resolve_session_profile_id(p_token_hash);
+  if v_caller_id is null then
+    raise exception 'UNAUTHORIZED';
+  end if;
+
+  delete from public.class_enrollments
+  where class_id = p_class_id and student_id = v_caller_id and status = 'pending';
+
+  return true;
+end;
+$$;
+
+-- ============================================================================
+-- 11. RPC Grants
+-- ============================================================================
+
 grant execute on function public.marin_register_profile(text, text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.marin_login_profile(text, text, text) to anon, authenticated;
 grant execute on function public.marin_get_session(text) to anon, authenticated;
@@ -956,6 +1438,14 @@ grant execute on function public.marin_dev_create_class(text, text, text, uuid, 
 grant execute on function public.marin_dev_update_class(text, uuid, text, text, uuid, boolean, text, integer, text) to anon, authenticated;
 grant execute on function public.marin_dev_delete_class(text, uuid) to anon, authenticated;
 grant execute on function public.marin_dev_set_class_enrollments(text, uuid, uuid[]) to anon, authenticated;
+grant execute on function public.marin_teacher_dashboard(text) to anon, authenticated;
+grant execute on function public.marin_teacher_create_class(text, text, text, text, integer, text, text) to anon, authenticated;
+grant execute on function public.marin_teacher_update_class(text, uuid, text, text, text, integer, text, text) to anon, authenticated;
+grant execute on function public.marin_teacher_delete_class(text, uuid) to anon, authenticated;
+grant execute on function public.marin_teacher_set_student_access(text, uuid, uuid, text) to anon, authenticated;
+grant execute on function public.marin_student_classes_dashboard(text) to anon, authenticated;
+grant execute on function public.marin_student_request_access(text, uuid, text) to anon, authenticated;
+grant execute on function public.marin_student_cancel_request(text, uuid) to anon, authenticated;
 
 -- 9. Create or Promote your Developer account directly in profiles (example):
 -- Option A (after signing up in the app):

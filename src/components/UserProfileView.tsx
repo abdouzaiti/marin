@@ -410,11 +410,43 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
               </div>
 
               <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                {(userProfile.role === "teacher" || isDeveloper) && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("teacher")}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md transition-colors cursor-pointer"
+                  >
+                    <GraduationCap className="w-3.5 h-3.5" />
+                    <span>
+                      {language === "ar"
+                        ? "فضاء الأستاذ"
+                        : language === "en"
+                          ? "Teacher Workspace"
+                          : "Espace Formateur"}
+                    </span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("classes")}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#1d8ccc] hover:bg-[#041d37] text-white text-xs sm:text-sm font-bold shadow-md transition-colors cursor-pointer"
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>
+                    {language === "ar"
+                      ? "الفصول الدراسية"
+                      : language === "en"
+                        ? "Classes & Teachers"
+                        : "Classes & Formateurs"}
+                  </span>
+                </button>
+
                 {isDeveloper && (
                   <button
                     type="button"
                     onClick={() => setActiveTab("developer")}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#1d8ccc] hover:bg-[#041d37] text-white text-xs sm:text-sm font-bold shadow-md transition-colors cursor-pointer"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#041d37] hover:bg-[#1d8ccc] text-white text-xs sm:text-sm font-bold shadow-md transition-colors cursor-pointer"
                   >
                     <Layers className="w-3.5 h-3.5" />
                     <span>{copy.openDevDashboard}</span>

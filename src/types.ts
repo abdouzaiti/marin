@@ -75,13 +75,34 @@ export interface Classroom {
   id: string;
   title: string;
   domain: string;
+  description?: string;
   teacherId: string | null;
   teacherName: string;
   teacherEmail: string;
+  teacherTitle?: string;
   schedule: string;
   capacity: number;
   status: "active" | "draft" | "archived";
   studentCount: number;
   studentIds: string[];
   createdAt: string;
+  accessStatus?: "none" | "pending" | "approved" | "rejected";
+  accessMessage?: string;
+  studentNames?: string[];
 }
+
+export interface ClassAccessRequest {
+  id: string;
+  classId: string;
+  classTitle: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  studentTitle?: string;
+  studentDomain?: string;
+  studentXp?: number;
+  status: "pending" | "approved" | "rejected";
+  message?: string;
+  createdAt: string;
+}
+

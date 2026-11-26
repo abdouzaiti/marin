@@ -99,14 +99,33 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
     password: "",
   });
   const [savingEditUser, setSavingEditUser] = useState<boolean>(false);
+  const [allPasswordsMasked, setAllPasswordsMasked] = useState<boolean>(false);
   const [maskedUserPasswords, setMaskedUserPasswords] = useState<Record<string, boolean>>({});
   const [showEditPassword, setShowEditPassword] = useState<boolean>(true);
 
+  const isPasswordMasked = (id: string) => {
+    if (maskedUserPasswords[id] !== undefined) {
+      return maskedUserPasswords[id];
+    }
+    return allPasswordsMasked;
+  };
+
   const toggleMaskPassword = (id: string) => {
-    setMaskedUserPasswords((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+    setMaskedUserPasswords((prev) => {
+      const current = prev[id] !== undefined ? prev[id] : allPasswordsMasked;
+      return {
+        ...prev,
+        [id]: !current,
+      };
+    });
+  };
+
+  const toggleAllPasswords = () => {
+    setAllPasswordsMasked((prev) => {
+      const next = !prev;
+      setMaskedUserPasswords({});
+      return next;
+    });
   };
 
   // Create / Edit Class Modal
@@ -709,7 +728,29 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                           <th className="py-3.5 px-4 text-start">{copy.colUser}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colCurrentRole}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colNoteDomain}</th>
-                          <th className="py-3.5 px-4 text-start">{copy.colPassword}</th>
+                          <th className="py-3.5 px-4 text-start">
+                            <div className="flex items-center gap-2">
+                              <span>{copy.colPassword}</span>
+                              <button
+                                type="button"
+                                onClick={toggleAllPasswords}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-200/80 hover:bg-slate-300 text-slate-700 text-[10px] font-semibold cursor-pointer transition-colors"
+                                title={allPasswordsMasked ? copy.showAllPasswords : copy.hideAllPasswords}
+                              >
+                                {allPasswordsMasked ? (
+                                  <>
+                                    <Eye className="w-3 h-3 text-[#1d8ccc]" />
+                                    <span>{copy.showAllPasswords}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <EyeOff className="w-3 h-3 text-slate-600" />
+                                    <span>{copy.hideAllPasswords}</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </th>
                           <th className="py-3.5 px-4 text-end">{copy.colActions}</th>
                         </tr>
                       </thead>
@@ -749,38 +790,17 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                                   <div className="text-[11px] text-slate-400">{u.title}</div>
                                 </td>
                                 <td className="py-3.5 px-4">
-                                  <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-sky-50 text-[#041d37] border border-sky-200 select-all tracking-wide">
-                                      {maskedUserPasswords[uid] ? "••••••••" : (u.password || "••••••••")}
-                                    </span>
-                                    {u.password && (
-                                      <button
-                                        type="button"
-                                        onClick={() => toggleMaskPassword(uid)}
-                                        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition-colors"
-                                        title={maskedUserPasswords[uid] ? copy.showPassword : copy.hidePassword}
-                                      >
-                                        {maskedUserPasswords[uid] ? (
-                                          <Eye className="w-3.5 h-3.5" />
-                                        ) : (
-                                          <EyeOff className="w-3.5 h-3.5" />
-                                        )}
-                                      </button>
-                                    )}
-                                    {u.password && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(u.password!);
-                                          showToast(copy.passwordCopied);
-                                        }}
-                                        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition-colors"
-                                        title={copy.copyPassword}
-                                      >
-                                        <Copy className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                  </div>
+                                  <PasswordCell
+                                    user={u}
+                                    isMasked={isPasswordMasked(uid)}
+                                    onToggleMask={() => toggleMaskPassword(uid)}
+                                    onEdit={() => openEditUserModal(u)}
+                                    onCopy={(pwd) => {
+                                      navigator.clipboard.writeText(pwd);
+                                      showToast(copy.passwordCopied);
+                                    }}
+                                    copy={copy}
+                                  />
                                 </td>
                                 <td className="py-3.5 px-4 text-end">
                                   <button
@@ -828,6 +848,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                         <tr>
                           <th className="py-3.5 px-4 text-start">{copy.colUser}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colRequestedRole}</th>
+                          <th className="py-3.5 px-4 text-start">{copy.colPassword}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colNoteDomain}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colStatus}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colAssignRole}</th>
@@ -837,7 +858,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                       <tbody className="divide-y divide-slate-100">
                         {filteredRequests.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="py-10 text-center text-slate-400 font-semibold">
+                            <td colSpan={7} className="py-10 text-center text-slate-400 font-semibold">
                               {copy.emptyRequests}
                             </td>
                           </tr>
@@ -858,6 +879,19 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                                 </td>
                                 <td className="py-3.5 px-4">
                                   <RoleBadge role={u.requestedRole || "student"} copy={copy} />
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <PasswordCell
+                                    user={u}
+                                    isMasked={isPasswordMasked(uid)}
+                                    onToggleMask={() => toggleMaskPassword(uid)}
+                                    onEdit={() => openEditUserModal(u)}
+                                    onCopy={(pwd) => {
+                                      navigator.clipboard.writeText(pwd);
+                                      showToast(copy.passwordCopied);
+                                    }}
+                                    copy={copy}
+                                  />
                                 </td>
                                 <td className="py-3.5 px-4 max-w-[220px]">
                                   <div className="font-semibold text-slate-700 truncate">
@@ -1088,6 +1122,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                       <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200/80">
                         <tr>
                           <th className="py-3.5 px-4 text-start">{copy.colUser}</th>
+                          <th className="py-3.5 px-4 text-start">{copy.colPassword}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colTitle}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colDomain}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colAssignedClasses}</th>
@@ -1097,18 +1132,19 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                       <tbody className="divide-y divide-slate-100">
                         {filteredTeachers.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="py-10 text-center text-slate-400 font-semibold">
+                            <td colSpan={6} className="py-10 text-center text-slate-400 font-semibold">
                               {copy.emptyTeachers}
                             </td>
                           </tr>
                         ) : (
                           filteredTeachers.map((teacher) => {
+                            const tid = teacher.id || teacher.email;
                             const classCount = classes.filter(
                               (c) => c.teacherId === teacher.id
                             ).length;
                             return (
                               <tr
-                                key={teacher.id || teacher.email}
+                                key={tid}
                                 className="hover:bg-sky-50/30 transition-colors"
                               >
                                 <td className="py-3.5 px-4">
@@ -1117,6 +1153,19 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                                     {teacher.email}
                                     {teacher.username ? ` • @${teacher.username}` : ""}
                                   </div>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <PasswordCell
+                                    user={teacher}
+                                    isMasked={isPasswordMasked(tid)}
+                                    onToggleMask={() => toggleMaskPassword(tid)}
+                                    onEdit={() => openEditUserModal(teacher)}
+                                    onCopy={(pwd) => {
+                                      navigator.clipboard.writeText(pwd);
+                                      showToast(copy.passwordCopied);
+                                    }}
+                                    copy={copy}
+                                  />
                                 </td>
                                 <td className="py-3.5 px-4 text-slate-600">{teacher.title}</td>
                                 <td className="py-3.5 px-4">
@@ -1128,21 +1177,31 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                                   {classCount}
                                 </td>
                                 <td className="py-3.5 px-4 text-end">
-                                  <select
-                                    value={teacher.role || "teacher"}
-                                    disabled={busyUserId === teacher.id || !teacher.id}
-                                    onChange={(e) =>
-                                      teacher.id &&
-                                      handleUpdateUserRole(teacher.id, e.target.value as UserRole)
-                                    }
-                                    className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#041d37] focus:outline-none focus:border-[#1d8ccc]"
-                                  >
-                                    {ALL_ROLES.map((r) => (
-                                      <option key={r} value={r}>
-                                        {copy.roleNames[r]}
-                                      </option>
-                                    ))}
-                                  </select>
+                                  <div className="flex items-center justify-end gap-2">
+                                    <select
+                                      value={teacher.role || "teacher"}
+                                      disabled={busyUserId === teacher.id || !teacher.id}
+                                      onChange={(e) =>
+                                        teacher.id &&
+                                        handleUpdateUserRole(teacher.id, e.target.value as UserRole)
+                                      }
+                                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#041d37] focus:outline-none focus:border-[#1d8ccc]"
+                                    >
+                                      {ALL_ROLES.map((r) => (
+                                        <option key={r} value={r}>
+                                          {copy.roleNames[r]}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      onClick={() => openEditUserModal(teacher)}
+                                      className="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#1d8ccc] hover:text-white text-[#041d37] flex items-center justify-center cursor-pointer transition-colors shrink-0"
+                                      title={copy.editBtn}
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             );
@@ -1179,6 +1238,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                       <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200/80">
                         <tr>
                           <th className="py-3.5 px-4 text-start">{copy.colUser}</th>
+                          <th className="py-3.5 px-4 text-start">{copy.colPassword}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colDomain}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colProgress}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colEnrolledClasses}</th>
@@ -1188,18 +1248,19 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                       <tbody className="divide-y divide-slate-100">
                         {filteredStudents.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="py-10 text-center text-slate-400 font-semibold">
+                            <td colSpan={6} className="py-10 text-center text-slate-400 font-semibold">
                               {copy.emptyStudents}
                             </td>
                           </tr>
                         ) : (
                           filteredStudents.map((student) => {
+                            const sid = student.id || student.email;
                             const enrolledCount = classes.filter((c) =>
                               student.id ? c.studentIds.includes(student.id) : false
                             ).length;
                             return (
                               <tr
-                                key={student.id || student.email}
+                                key={sid}
                                 className="hover:bg-sky-50/30 transition-colors"
                               >
                                 <td className="py-3.5 px-4">
@@ -1208,6 +1269,19 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                                     {student.email}
                                     {student.username ? ` • @${student.username}` : ""}
                                   </div>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <PasswordCell
+                                    user={student}
+                                    isMasked={isPasswordMasked(sid)}
+                                    onToggleMask={() => toggleMaskPassword(sid)}
+                                    onEdit={() => openEditUserModal(student)}
+                                    onCopy={(pwd) => {
+                                      navigator.clipboard.writeText(pwd);
+                                      showToast(copy.passwordCopied);
+                                    }}
+                                    copy={copy}
+                                  />
                                 </td>
                                 <td className="py-3.5 px-4">
                                   <span className="px-2.5 py-0.5 rounded-full bg-sky-50 text-[#1d8ccc] border border-sky-100 text-[11px] font-bold">
@@ -1227,21 +1301,31 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                                   {enrolledCount}
                                 </td>
                                 <td className="py-3.5 px-4 text-end">
-                                  <select
-                                    value={student.role || "student"}
-                                    disabled={busyUserId === student.id || !student.id}
-                                    onChange={(e) =>
-                                      student.id &&
-                                      handleUpdateUserRole(student.id, e.target.value as UserRole)
-                                    }
-                                    className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#041d37] focus:outline-none focus:border-[#1d8ccc]"
-                                  >
-                                    {ALL_ROLES.map((r) => (
-                                      <option key={r} value={r}>
-                                        {copy.roleNames[r]}
-                                      </option>
-                                    ))}
-                                  </select>
+                                  <div className="flex items-center justify-end gap-2">
+                                    <select
+                                      value={student.role || "student"}
+                                      disabled={busyUserId === student.id || !student.id}
+                                      onChange={(e) =>
+                                        student.id &&
+                                        handleUpdateUserRole(student.id, e.target.value as UserRole)
+                                      }
+                                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#041d37] focus:outline-none focus:border-[#1d8ccc]"
+                                    >
+                                      {ALL_ROLES.map((r) => (
+                                        <option key={r} value={r}>
+                                          {copy.roleNames[r]}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      onClick={() => openEditUserModal(student)}
+                                      className="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#1d8ccc] hover:text-white text-[#041d37] flex items-center justify-center cursor-pointer transition-colors shrink-0"
+                                      title={copy.editBtn}
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             );
@@ -1278,6 +1362,7 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                       <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200/80">
                         <tr>
                           <th className="py-3.5 px-4 text-start">{copy.colUser}</th>
+                          <th className="py-3.5 px-4 text-start">{copy.colPassword}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colTitle}</th>
                           <th className="py-3.5 px-4 text-start">{copy.colCurrentRole}</th>
                           <th className="py-3.5 px-4 text-end">{copy.colAssignRole}</th>
@@ -1285,10 +1370,11 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {filteredStaff.map((member) => {
+                          const mid = member.id || member.email;
                           const isSelf = member.id === profile.id;
                           return (
                             <tr
-                              key={member.id || member.email}
+                              key={mid}
                               className="hover:bg-sky-50/30 transition-colors"
                             >
                               <td className="py-3.5 px-4">
@@ -1300,26 +1386,49 @@ export const DeveloperDashboard: React.FC<DeveloperDashboardProps> = ({
                                   {member.email}
                                 </div>
                               </td>
+                              <td className="py-3.5 px-4">
+                                <PasswordCell
+                                  user={member}
+                                  isMasked={isPasswordMasked(mid)}
+                                  onToggleMask={() => toggleMaskPassword(mid)}
+                                  onEdit={() => openEditUserModal(member)}
+                                  onCopy={(pwd) => {
+                                    navigator.clipboard.writeText(pwd);
+                                    showToast(copy.passwordCopied);
+                                  }}
+                                  copy={copy}
+                                />
+                              </td>
                               <td className="py-3.5 px-4 text-slate-600">{member.title}</td>
                               <td className="py-3.5 px-4">
                                 <RoleBadge role={member.role || "admin"} copy={copy} />
                               </td>
                               <td className="py-3.5 px-4 text-end">
-                                <select
-                                  value={member.role || "admin"}
-                                  disabled={busyUserId === member.id || !member.id || isSelf}
-                                  onChange={(e) =>
-                                    member.id &&
-                                    handleUpdateUserRole(member.id, e.target.value as UserRole)
-                                  }
-                                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#041d37] focus:outline-none focus:border-[#1d8ccc] disabled:opacity-50"
-                                >
-                                  {ALL_ROLES.map((r) => (
-                                    <option key={r} value={r}>
-                                      {copy.roleNames[r]}
-                                    </option>
-                                  ))}
-                                </select>
+                                <div className="flex items-center justify-end gap-2">
+                                  <select
+                                    value={member.role || "admin"}
+                                    disabled={busyUserId === member.id || !member.id || isSelf}
+                                    onChange={(e) =>
+                                      member.id &&
+                                      handleUpdateUserRole(member.id, e.target.value as UserRole)
+                                    }
+                                    className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#041d37] focus:outline-none focus:border-[#1d8ccc] disabled:opacity-50"
+                                  >
+                                    {ALL_ROLES.map((r) => (
+                                      <option key={r} value={r}>
+                                        {copy.roleNames[r]}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    type="button"
+                                    onClick={() => openEditUserModal(member)}
+                                    className="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#1d8ccc] hover:text-white text-[#041d37] flex items-center justify-center cursor-pointer transition-colors shrink-0"
+                                    title={copy.editBtn}
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           );
@@ -1859,6 +1968,83 @@ function RoleBadge({
   );
 }
 
+interface PasswordCellProps {
+  user: UserProfile;
+  isMasked: boolean;
+  onToggleMask: () => void;
+  onEdit: () => void;
+  onCopy: (pwd: string) => void;
+  copy: ReturnType<typeof useDeveloperCopy>;
+}
+
+function PasswordCell({
+  user,
+  isMasked,
+  onToggleMask,
+  onEdit,
+  onCopy,
+  copy,
+}: PasswordCellProps) {
+  const hasPassword = Boolean(user.password && user.password.trim().length > 0);
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {isMasked ? (
+        <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-sky-50 text-slate-400 border border-sky-100 select-none tracking-widest">
+          ••••••••
+        </span>
+      ) : hasPassword ? (
+        <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 select-all tracking-wide">
+          {user.password}
+        </span>
+      ) : (
+        <span className="font-sans text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200">
+          {copy.passwordNotSet}
+        </span>
+      )}
+
+      {/* Eye toggle button - Unconditionally rendered for ALL users */}
+      <button
+        type="button"
+        onClick={onToggleMask}
+        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition-colors"
+        title={isMasked ? copy.showPassword : copy.hidePassword}
+      >
+        {isMasked ? (
+          <Eye className="w-3.5 h-3.5 text-[#1d8ccc]" />
+        ) : (
+          <EyeOff className="w-3.5 h-3.5 text-slate-600" />
+        )}
+      </button>
+
+      {/* If revealed and has password, show Copy button */}
+      {!isMasked && hasPassword && (
+        <button
+          type="button"
+          onClick={() => onCopy(user.password!)}
+          className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition-colors"
+          title={copy.copyPassword}
+        >
+          <Copy className="w-3.5 h-3.5" />
+        </button>
+      )}
+
+      {/* If revealed and password not set, show quick Set button */}
+      {!isMasked && !hasPassword && (
+        <button
+          type="button"
+          onClick={onEdit}
+          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#1d8ccc] hover:bg-[#041d37] text-white text-[10px] font-bold cursor-pointer transition-colors"
+          title={copy.setPassword}
+        >
+          <Key className="w-3 h-3" />
+          <span>{copy.setPassword}</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 function useDeveloperCopy(language: "fr" | "ar" | "en") {
   if (language === "ar") {
     return {
@@ -1880,6 +2066,10 @@ function useDeveloperCopy(language: "fr" | "ar" | "en") {
       hidePassword: "إخفاء كلمة المرور",
       copyPassword: "نسخ كلمة المرور",
       passwordCopied: "تم نسخ كلمة المرور إلى الحافظة!",
+      passwordNotSet: "غير مسجل بعد",
+      setPassword: "تعيين",
+      showAllPasswords: "إظهار الكل",
+      hideAllPasswords: "إخفاء الكل",
       editUserTitle: "تعديل حساب المستخدم",
       newPasswordHint: "يمكنك تعديل كلمة المرور هنا وسيتم تحديثها تلقائياً مع تشفير Bcrypt.",
       userUpdated: "تم تحديث بيانات المستخدم بنجاح.",
@@ -1979,6 +2169,10 @@ function useDeveloperCopy(language: "fr" | "ar" | "en") {
       hidePassword: "Hide password",
       copyPassword: "Copy password",
       passwordCopied: "Password copied to clipboard!",
+      passwordNotSet: "Not set yet",
+      setPassword: "Set",
+      showAllPasswords: "Show all",
+      hideAllPasswords: "Hide all",
       editUserTitle: "Edit User Account",
       newPasswordHint: "Modify this field to update the password (updates both real password and bcrypt hash).",
       userUpdated: "User account updated successfully.",
@@ -2077,6 +2271,10 @@ function useDeveloperCopy(language: "fr" | "ar" | "en") {
     hidePassword: "Masquer le mot de passe",
     copyPassword: "Copier le mot de passe",
     passwordCopied: "Mot de passe copié dans le presse-papier !",
+    passwordNotSet: "Non défini",
+    setPassword: "Définir",
+    showAllPasswords: "Tout afficher",
+    hideAllPasswords: "Tout masquer",
     editUserTitle: "Modifier le compte utilisateur",
     newPasswordHint: "Modifiez ce champ pour changer le mot de passe (met à jour le mot de passe réel et le hash bcrypt).",
     userUpdated: "Compte utilisateur mis à jour avec succès.",

@@ -190,6 +190,22 @@ export const MarinHomePage: React.FC<MarinHomePageProps> = ({
                   <span>{t("browseCourses")}</span>
                 </button>
 
+                {setActiveTab && (
+                  <button
+                    onClick={() => setActiveTab("classes")}
+                    className="px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-white hover:bg-sky-50 text-[#041d37] font-bold text-sm sm:text-base shadow-xl shadow-black/10 transition-all cursor-pointer flex items-center gap-2"
+                  >
+                    <GraduationCap className="w-4 h-4 text-[#1d8ccc]" />
+                    <span>
+                      {language === "ar"
+                        ? "الفصول الدراسية"
+                        : language === "en"
+                          ? "Browse Classes"
+                          : "Explorer les Classes"}
+                    </span>
+                  </button>
+                )}
+
                 {onOpenAbout && (
                   <button
                     onClick={onOpenAbout}

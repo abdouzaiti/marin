@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { DoorOpen, LogOut, ShieldCheck } from "lucide-react";
+import { DoorOpen, LogOut, ShieldCheck, BookOpen, GraduationCap } from "lucide-react";
 import { UserProfile } from "../types";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
@@ -111,6 +111,58 @@ export const YouTubeNavbar: React.FC<YouTubeNavbarProps> = ({
                   ? "Academy"
                   : "الأكاديمية"}
             </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("classes");
+                scrollToTop();
+              }}
+              className={`text-xs sm:text-sm font-bold px-3.5 py-2 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 ${
+                activeTab === "classes" || activeTab === "student-dashboard"
+                  ? isTransparentHeader
+                    ? "bg-white text-[#041d37] shadow-sm"
+                    : "bg-[#1d8ccc] text-white shadow-xs"
+                  : isTransparentHeader
+                    ? "text-white/90 hover:text-white hover:bg-white/20"
+                    : "text-slate-700 hover:text-[#1d8ccc] hover:bg-slate-100"
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>
+                {language === "fr"
+                  ? "Classes"
+                  : language === "en"
+                    ? "Classes"
+                    : "الفصول"}
+              </span>
+            </button>
+
+            {(profile.role === "teacher" || isDeveloper) && (
+              <button
+                onClick={() => {
+                  setActiveTab("teacher");
+                  scrollToTop();
+                }}
+                className={`text-xs sm:text-sm font-bold px-3.5 py-2 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 ${
+                  activeTab === "teacher"
+                    ? isTransparentHeader
+                      ? "bg-white text-[#041d37] shadow-sm"
+                      : "bg-[#041d37] text-white shadow-xs"
+                    : isTransparentHeader
+                      ? "text-white/95 hover:text-white hover:bg-white/20"
+                      : "text-[#041d37] hover:text-[#1d8ccc] hover:bg-sky-50"
+                }`}
+              >
+                <GraduationCap className="w-4 h-4 text-emerald-400" />
+                <span>
+                  {language === "fr"
+                    ? "Espace Formateur"
+                    : language === "en"
+                      ? "Teacher Space"
+                      : "فضاء الأستاذ"}
+                </span>
+              </button>
+            )}
 
             {isDeveloper && (
               <button
